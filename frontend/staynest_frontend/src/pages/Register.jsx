@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { ownerRegister } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
     const [fullName, setFullName] = useState("");
@@ -9,14 +11,17 @@ export default function Register() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState("");
     const [role, setRole] = useState("user");
+    const [phone, setPhone] = useState("");
+    const [address, setAddress] = useState("");
 
 
+    const navigate = useNavigate();
 
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
 
-        if (!fullName || !email || !password || !confirmPassword) {
+        if (!fullName || !email || !password || !confirmPassword || !phone || !address) {
             setError("All fields are required");
             return;
         }
@@ -26,13 +31,26 @@ export default function Register() {
             return;
         }
 
-        console.log("Full Name:", fullName);
-        console.log("Email:", email);
-        console.log("Password:", password);
+        try {
+            if (role === "owner") {
+                await ownerRegister({
+                    email,
+                    password,
+                    username: fullName,
+                    phone,
+                    address,
+                });
 
-        setError("");
-        alert("Register form submitted (Backend integration soon)");
+                alert("Owner registered successfully! Pending admin approval.");
+                navigate("/login");
+            } else {
+                alert("User registration API not built yet.");
+            }
+        } catch (error) {
+            setError("Registration failed. Please try again.");
+        }
     };
+
 
     return (
         <div style={{ padding: "20px" }}>
@@ -106,6 +124,26 @@ export default function Register() {
                         {showConfirmPassword ? "Hide" : "Show"}
                     </button>
                 </div>
+                <div style={{ marginBottom: "10px" }}>
+                    <label>Phone:</label><br />
+                    <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        style={{ width: "250px", padding: "8px" }}
+                    />
+                </div>
+
+                <div style={{ marginBottom: "10px" }}>
+                    <label>Address:</label><br />
+                    <input
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        style={{ width: "250px", padding: "8px" }}
+                    />
+                </div>
+
 
                 <div style={{ marginBottom: "10px" }}>
                     <label>Select Role:</label><br />

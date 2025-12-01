@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { login } from "../services/authService";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -6,14 +9,34 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
 
-    try {
-        const data = await login(email, password);
-        loginContext(data.user, data.token);
-        alert("Login successful");
-    } catch (error) {
-        setError("Invalid email or password");
-    }
+    const { loginUser } = useContext(AuthContext);
+    const navigate = useNavigate();
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        try {
+            const data = await login({
+                email: email,
+                password: password,
+            });
+
+            // Save user + token in context
+            loginUser(data);
+
+            alert("Login successful");
+
+            // redirect owner
+            if (data.role === "owner") {
+                navigate("/owner/dashboard");
+            } else {
+                navigate("/");
+            }
+        } catch (err) {
+            setError("Invalid email or password");
+        }
+    };
 
     return (
         <div style={{ padding: "20px" }}>
