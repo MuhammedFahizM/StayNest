@@ -10,23 +10,51 @@ import OwnerDashboard from "./pages/OwnerDashboard";
 import ChatPage from "./pages/ChatPage";
 import Navbar from "./components/Navbar";
 
+// NEW
+import ProtectedRoute from "./routes/ProtectedRoute";
+import OwnerRoute from "./routes/OwnerRoute";
 
 function App() {
   return (
     <Router>
-
       <Navbar />
 
-
       <Routes>
+        {/* PUBLIC ROUTES */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/properties" element={<PropertyList />} />
         <Route path="/property/:id" element={<PropertyDetails />} />
-        <Route path="/booking" element={<BookingPage />} />
-        <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-        <Route path="/chat" element={<ChatPage />} />
+
+        {/* USER PROTECTED ROUTES */}
+        <Route
+          path="/booking"
+          element={
+            <ProtectedRoute>
+              <BookingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* OWNER-ONLY ROUTE */}
+        <Route
+          path="/owner/dashboard"
+          element={
+            <OwnerRoute>
+              <OwnerDashboard />
+            </OwnerRoute>
+          }
+        />
       </Routes>
     </Router>
   );

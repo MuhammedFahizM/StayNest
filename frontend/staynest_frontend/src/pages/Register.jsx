@@ -1,180 +1,228 @@
+// Register.jsx — SaaS-Style Unified Registration (Logic Unchanged)
+
 import { useState } from "react";
-import { ownerRegister } from "../services/authService";
 import { useNavigate } from "react-router-dom";
+import { register } from "../services/authService";
 
 export default function Register() {
-    const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [error, setError] = useState("");
-    const [role, setRole] = useState("user");
-    const [phone, setPhone] = useState("");
-    const [address, setAddress] = useState("");
+  const navigate = useNavigate();
 
+  const [role, setRole] = useState("user");
 
-    const navigate = useNavigate();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [idProof, setIdProof] = useState(null);
 
-        if (!fullName || !email || !password || !confirmPassword || !phone || !address) {
-            setError("All fields are required");
-            return;
-        }
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        if (password !== confirmPassword) {
-            setError("Passwords do not match");
-            return;
-        }
+  const validateForm = () => {
+    if (!fullName.trim() || !email.trim()) return "Full name & email required";
+    if (!password.trim()) return "Password required";
+    if (password !== confirmPassword) return "Passwords do not match";
+    if (!idProof) return "ID Proof is required";
 
-        try {
-            if (role === "owner") {
-                await ownerRegister({
-                    email,
-                    password,
-                    username: fullName,
-                    phone,
-                    address,
-                });
+    if (role === "owner") {
+      if (!phone.trim() || !address.trim()) return "Phone & address required";
+    }
 
-                alert("Owner registered successfully! Pending admin approval.");
-                navigate("/login");
-            } else {
-                alert("User registration API not built yet.");
-            }
-        } catch (error) {
-            setError("Registration failed. Please try again.");
-        }
-    };
+    return null;
+  };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-    return (
-        <div style={{ padding: "20px" }}>
-            <h2>Register</h2>
+    const err = validateForm();
+    if (err) return setError(err);
 
-            <form onSubmit={handleSubmit}>
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("full_name", fullName);
+      fd.append("email", email);
+      fd.append("password", password);
+      fd.append("role", role);
+      fd.append("proof", idProof);
 
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Full Name:</label><br />
-                    <input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        style={{ width: "250px", padding: "8px" }}
-                    />
-                </div>
+      if (role === "owner") {
+        fd.append("phone", phone);
+        fd.append("address", address);
+      }
 
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Email:</label><br />
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        style={{ width: "250px", padding: "8px" }}
-                    />
-                </div>
+      const res = await register(fd);
+      alert(res.data.detail || "Registration successful. Please verify your email.");
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data ? JSON.stringify(err.response.data) : "Network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Password:</label><br />
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
+      <div className="bg-white w-full max-w-xl p-8 rounded-2xl shadow-xl border">
 
-                    <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        style={{ width: "250px", padding: "8px" }}
-                    />
-
-                    <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{
-                            marginLeft: "10px",
-                            padding: "5px 10px",
-                            cursor: "pointer"
-                        }}
-                    >
-                        {showPassword ? "Hide" : "Show"}
-                    </button>
-                </div>
-
-
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Confirm Password:</label><br />
-
-                    <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        style={{ width: "250px", padding: "8px" }}
-                    />
-
-                    <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        style={{
-                            marginLeft: "10px",
-                            padding: "5px 10px",
-                            cursor: "pointer"
-                        }}
-                    >
-                        {showConfirmPassword ? "Hide" : "Show"}
-                    </button>
-                </div>
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Phone:</label><br />
-                    <input
-                        type="text"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        style={{ width: "250px", padding: "8px" }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Address:</label><br />
-                    <input
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        style={{ width: "250px", padding: "8px" }}
-                    />
-                </div>
-
-
-                <div style={{ marginBottom: "10px" }}>
-                    <label>Select Role:</label><br />
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        style={{ width: "250px", padding: "8px" }}
-                    >
-                        <option value="user">User</option>
-                        <option value="owner">Owner</option>
-                    </select>
-                </div>
-
-
-                {error && (
-                    <p style={{ color: "red" }}>{error}</p>
-                )}
-
-                <button
-                    type="submit"
-                    style={{
-                        padding: "8px 20px",
-                        backgroundColor: "black",
-                        color: "white",
-                        border: "none",
-                        cursor: "pointer"
-                    }}
-                >
-                    Register
-                </button>
-            </form>
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Create Your Account</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Register as a user or property owner to continue
+          </p>
         </div>
-    );
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* Role Selector */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Account Type
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="user">User</option>
+              <option value="owner">Owner</option>
+            </select>
+
+            {role === "owner" && (
+              <p className="text-xs text-gray-500 mt-1">
+                Owners must provide verification details.
+              </p>
+            )}
+          </div>
+
+          {/* Base Fields */}
+          <div>
+            <label className="block text-sm font-medium">Full Name</label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full p-2.5 border rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Email Address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2.5 border rounded-lg"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-medium">Password</label>
+            <div className="flex gap-2">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2.5 border rounded-lg"
+              />
+              <button
+                type="button"
+                className="px-4 border rounded-lg text-sm"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Confirm Password</label>
+            <div className="flex gap-2">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full p-2.5 border rounded-lg"
+              />
+              <button
+                type="button"
+                className="px-4 border rounded-lg text-sm"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          {/* Owner Only Fields */}
+          {role === "owner" && (
+            <>
+              <div>
+                <label className="block text-sm font-medium">Phone</label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full p-2.5 border rounded-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Address</label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full p-2.5 border rounded-lg"
+                />
+              </div>
+            </>
+          )}
+
+
+          {/* ID Proof */}
+          <div>
+            <label className="block text-sm font-medium">
+              Government ID Proof
+            </label>
+            <input
+              type="file"
+              onChange={(e) => setIdProof(e.target.files[0])}
+              className="w-full text-sm"
+            />
+          </div>
+
+          {error && (
+            <p className="text-red-600 text-sm bg-red-50 border border-red-200 p-2 rounded">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-semibold transition disabled:opacity-50"
+          >
+            {loading ? "Creating Account..." : "Create Account"}
+          </button>
+
+          <p className="text-center text-sm text-gray-500">
+            Already have an account?{" "}
+            <span
+              onClick={() => navigate("/login")}
+              className="text-blue-600 cursor-pointer hover:underline"
+            >
+              Login
+            </span>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
 }

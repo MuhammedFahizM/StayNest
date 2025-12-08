@@ -1,18 +1,20 @@
 import api from "./api";
 
-// Owner Register
-export const ownerRegister = async (data) => {
-  const response = await api.post("/accounts/register/owner/", data);
-  return response.data;
+// Combined Register (for user + owner)
+export const register = async (formData) => {
+  const response = await api.post("/accounts/register/", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response;
 };
 
-// Login (works for owner & user)
+// Login (works for both roles)
 export const login = async (data) => {
   const response = await api.post("/accounts/login/", data);
   return response.data;
 };
 
-// Check Owner Dashboard
+// Owner Dashboard (protected)
 export const ownerDashboard = async () => {
   const response = await api.get("/accounts/owner/dashboard/");
   return response.data;
