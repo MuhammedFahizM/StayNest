@@ -4,6 +4,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import datetime
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -53,6 +55,27 @@ class EmailVerificationToken(models.Model):
         return f"{getattr(self.user, 'email', str(self.user))} - {self.token}"
 
 
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        # set default expiry to 24 hours from creation if not provided
+        if not self.expires_at:
+            self.expires_at = timezone.now() + datetime.timedelta(hours=24)
+        super().save(*args, **kwargs)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def __str__(self):
+        return f"{getattr(self.user, 'email', str(self.user))} - {self.token}"
+
+
+
 # Signal to create Profile automatically when a User is created
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
@@ -64,3 +87,5 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
             instance.profile.save()
         else:
             Profile.objects.create(user=instance)
+
+

@@ -1,14 +1,20 @@
 import axios from "axios";
 
+// Request interceptor — attach access token
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: "http://127.0.0.1:8000/api/",  // IMPORTANT FIX
 });
 
 // Request interceptor — attach access token
 api.interceptors.request.use((config) => {
-  const publicUrls = ["/accounts/login/", "/accounts/register/"];
+  const publicUrls = [
+    "/accounts/login/",
+    "/accounts/register/",
+    "/accounts/forgot-password/",
+    "/accounts/reset-password/",
+  ];
 
-  if (!publicUrls.some((url) => config.url.includes(url))) {
+  if (!publicUrls.some((url) => config.url.endsWith(url))) {
     const token = localStorage.getItem("access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -16,6 +22,7 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
 
 // Response interceptor — handles expired tokens
 api.interceptors.response.use(

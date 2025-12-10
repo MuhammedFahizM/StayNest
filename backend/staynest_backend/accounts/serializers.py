@@ -36,9 +36,21 @@ class CombinedRegisterSerializer(serializers.Serializer):
             if not attrs.get("address"):
                 raise serializers.ValidationError({"address": "Address is required for owners"})
 
-        # email check (username == email)
-        if User.objects.filter(username=attrs["email"]).exists():
-            raise serializers.ValidationError({"email": "Email already registered."})
+            # email check (username == email)
+            # Email already registered — check active status
+        existing_user = User.objects.filter(username=attrs["email"]).first()
+
+        if existing_user:
+            if existing_user.is_active:
+            # Fully registered user → block
+                raise serializers.ValidationError({"email": "Email already registered."})
+            else:
+            # User registered but not verified → allow re-registration?
+            # For now, we resend verification instead of blocking:
+                raise serializers.ValidationError({
+                "email": "Email already registered but not verified. Please verify your email or request a new verification link."
+            })
+
 
         return attrs
 
@@ -88,3 +100,18 @@ class CombinedRegisterSerializer(serializers.Serializer):
             return owner
 
         return user
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.UUIDField(required=True)
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        if attrs.get("password") != attrs.get("password_confirm"):
+            raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
+        return attrs

@@ -14,49 +14,74 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import OwnerRoute from "./routes/OwnerRoute";
 
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
+import VerifyEmail from "./pages/VerifyEmail";
+
+import EmailSent from "./pages/EmailSent";
+import EmailActionResult from "./pages/EmailActionResult";
+
+
+
 function App() {
   return (
-    <Router>
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200">
+      <Router>
+        <Navbar />
+        <div className="pt-24">   {/* ← adds spacing below navbar */}
 
-      <Routes>
-        {/* PUBLIC ROUTES */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/properties" element={<PropertyList />} />
-        <Route path="/property/:id" element={<PropertyDetails />} />
+          <Routes>
+            {/* PUBLIC ROUTES */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/properties" element={<PropertyList />} />
+            <Route path="/property/:id" element={<PropertyDetails />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            {/* Email flows */}
+            <Route path="/email-sent" element={<EmailSent />} />
+            <Route path="/action-result" element={<EmailActionResult />} />
 
-        {/* USER PROTECTED ROUTES */}
-        <Route
-          path="/booking"
-          element={
-            <ProtectedRoute>
-              <BookingPage />
-            </ProtectedRoute>
-          }
-        />
+            {/* Keep existing verify-email link working */}
+            <Route path="/verify-email/:token" element={<EmailActionResult />} />
 
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          }
-        />
 
-        {/* OWNER-ONLY ROUTE */}
-        <Route
-          path="/owner/dashboard"
-          element={
-            <OwnerRoute>
-              <OwnerDashboard />
-            </OwnerRoute>
-          }
-        />
-      </Routes>
-    </Router>
+
+            {/* USER PROTECTED ROUTES */}
+            <Route
+              path="/booking"
+              element={
+                <ProtectedRoute>
+                  <BookingPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* OWNER-ONLY ROUTE */}
+            <Route
+              path="/owner/dashboard"
+              element={
+                <OwnerRoute>
+                  <OwnerDashboard />
+                </OwnerRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </div>
   );
 }
 
