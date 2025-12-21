@@ -6,8 +6,11 @@ export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
-  const [loading, setLoading] = useState(true); // NEW
+  const [loading, setLoading] = useState(true);
 
+  /* ---------------------------------------------------
+     Load auth state from localStorage on app start
+  --------------------------------------------------- */
   useEffect(() => {
     const storedToken = localStorage.getItem("access_token");
     const storedRefresh = localStorage.getItem("refresh_token");
@@ -19,14 +22,18 @@ export default function AuthProvider({ children }) {
       setUser(JSON.parse(storedUser));
     }
 
-    setLoading(false); // FINISH LOADING
+    setLoading(false);
   }, []);
 
+  /* ---------------------------------------------------
+     Login user (called after successful login API)
+  --------------------------------------------------- */
   const loginUser = (data) => {
     const newUser = {
       full_name: data.full_name,
       email: data.email,
       role: data.role,
+      profile_image: data.profile_image || null, // ✅ IMPORTANT
     };
 
     setUser(newUser);
@@ -38,6 +45,23 @@ export default function AuthProvider({ children }) {
     localStorage.setItem("user", JSON.stringify(newUser));
   };
 
+  /* ---------------------------------------------------
+     Update user fields (used after profile edit)
+     This keeps navbar & UI in sync instantly
+  --------------------------------------------------- */
+  const updateUser = (updatedFields) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+
+      const updatedUser = { ...prev, ...updatedFields };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  };
+
+  /* ---------------------------------------------------
+     Logout
+  --------------------------------------------------- */
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -50,7 +74,15 @@ export default function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, refreshToken, loginUser, logout, loading }}
+      value={{
+        user,
+        token,
+        refreshToken,
+        loginUser,
+        updateUser, // ✅ exposed for profile updates
+        logout,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>

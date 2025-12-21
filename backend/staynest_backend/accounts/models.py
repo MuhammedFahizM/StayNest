@@ -40,10 +40,35 @@ class Owner(models.Model):
     is_verified = models.BooleanField(default=False)
     proof = models.FileField(upload_to=owner_proof_upload_to, null=True, blank=True)  # <-- added
     created_at = models.DateTimeField(auto_now_add=True)
-
+    # ADD ONLY THIS FIELD INSIDE Owner MODEL
+    profile_photo = models.ImageField(
+        upload_to="owner_profiles/",
+        null=True,
+        blank=True
+    ) 
     def __str__(self):
         # keep using email if available
         return getattr(self.user, "email", str(self.user))
+    
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=Owner)
+def sync_profile_on_owner_verification(sender, instance, **kwargs):
+    """
+    Source of truth:
+    Owner.is_verified == True
+
+    Effect:
+    Profile.is_approved == True
+    """
+    if instance.is_verified:
+        profile = instance.user.profile
+        if not profile.is_approved:
+            profile.is_approved = True
+            profile.save(update_fields=["is_approved"])
+
 
 
 class EmailVerificationToken(models.Model):
@@ -88,4 +113,16 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         else:
             Profile.objects.create(user=instance)
 
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+
+@receiver(pre_delete, sender=Owner)
+def delete_user_when_owner_deleted(sender, instance, **kwargs):
+    """
+    When an Owner is deleted by admin,
+    delete the associated User (which cascades Profile).
+    """
+    user = instance.user
+    if user:
+        user.delete()
 

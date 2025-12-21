@@ -20,9 +20,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+
     path('admin/', admin.site.urls),
     path('api/accounts/', include('accounts.urls')),
+    path('properties/',include('properties.urls')),
+
 ]
+
+
 
 # Serve media files (ID proofs) in development
 if settings.DEBUG:

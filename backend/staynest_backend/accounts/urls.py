@@ -7,6 +7,8 @@ from .views import (
     VerifyEmailView,
     CombinedRegisterView,
     ResendVerificationView,
+    OwnerProfileView,
+    AdminOwnerProfileListView,
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -28,6 +30,11 @@ urlpatterns = [
     path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
 
     path("resend-verification/", ResendVerificationView.as_view(), name="resend-verification"),
+
+    path("owner/profile/", OwnerProfileView.as_view(), name="owner-profile"),
+    
+    path("admin/owners/", AdminOwnerProfileListView.as_view(), name="admin-owner-profiles"),
+
 
 
 ]

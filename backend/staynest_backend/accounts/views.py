@@ -64,9 +64,17 @@ class LoginView(APIView):
             "full_name": user.first_name,
             "email": user.email,
             "role": user.profile.role,
+
+            "profile_image": (
+                request.build_absolute_uri(user.owner.profile_photo.url)
+                if hasattr(user, "owner") and user.owner.profile_photo
+                else None
+            ),
+
             "access_token": str(refresh.access_token),
             "refresh_token": str(refresh),
         }, status=status.HTTP_200_OK)
+
 
 
 # ---------------------------------------------------------
@@ -249,3 +257,51 @@ class ResendVerificationView(APIView):
 
         return Response({"message": "A new verification link has been sent."},
                         status=status.HTTP_200_OK)
+
+
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+
+from .models import Owner
+from .serializers import (
+    OwnerProfileReadSerializer,
+    OwnerProfileUpdateSerializer
+)
+from .permissions import IsOwnerSelf
+
+
+class OwnerProfileView(RetrieveUpdateAPIView):
+    """
+    Owner Profile:
+    - READ own profile
+    - UPDATE allowed fields only (PATCH)
+    - DELETE NOT ALLOWED
+    """
+
+    permission_classes = [IsAuthenticated, IsOwnerSelf]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return Owner.objects.select_related("user", "user__profile")
+
+    def get_object(self):
+        return Owner.objects.get(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return OwnerProfileUpdateSerializer
+        return OwnerProfileReadSerializer
+
+
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAdminUser
+
+class AdminOwnerProfileListView(ListAPIView):
+    """
+    Admin can READ owner profiles
+    No update / delete here
+    """
+    permission_classes = [IsAdminUser]
+    serializer_class = OwnerProfileReadSerializer
+    queryset = Owner.objects.select_related("user", "user__profile")

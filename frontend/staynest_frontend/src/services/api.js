@@ -12,6 +12,7 @@ api.interceptors.request.use((config) => {
     "/accounts/register/",
     "/accounts/forgot-password/",
     "/accounts/reset-password/",
+    "/accounts/verify-email/",
   ];
 
   if (!publicUrls.some((url) => config.url.endsWith(url))) {

@@ -17,10 +17,14 @@ import OwnerRoute from "./routes/OwnerRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
-import VerifyEmail from "./pages/VerifyEmail";
+// import VerifyEmail from "./pages/VerifyEmail";
 
 import EmailSent from "./pages/EmailSent";
 import EmailActionResult from "./pages/EmailActionResult";
+
+import OwnerProfileView from "./pages/OwnerProfileView";
+import OwnerProfileEdit from "./pages/OwnerProfileEdit";
+
 
 
 
@@ -38,7 +42,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/properties" element={<PropertyList />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
-            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            {/* <Route path="/verify-email/:token" element={<VerifyEmail />} /> */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             {/* Email flows */}
@@ -68,8 +72,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* OWNER-ONLY ROUTE */}
+            {/* OWNER-ONLY ROUTES */}
             <Route
               path="/owner/dashboard"
               element={
@@ -78,6 +81,25 @@ function App() {
                 </OwnerRoute>
               }
             />
+
+            <Route
+              path="/owner/profile"
+              element={
+                <OwnerRoute>
+                  <OwnerProfileView />
+                </OwnerRoute>
+              }
+            />
+
+            <Route
+              path="/owner/profile/edit"
+              element={
+                <OwnerRoute>
+                  <OwnerProfileEdit />
+                </OwnerRoute>
+              }
+            />
+
           </Routes>
         </div>
       </Router>

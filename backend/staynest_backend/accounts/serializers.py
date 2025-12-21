@@ -115,3 +115,58 @@ class ResetPasswordSerializer(serializers.Serializer):
         if attrs.get("password") != attrs.get("password_confirm"):
             raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
         return attrs
+
+class OwnerProfileReadSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+    full_name = serializers.CharField(source="user.first_name", read_only=True)
+    role = serializers.CharField(source="user.profile.role", read_only=True)
+    is_email_verified = serializers.BooleanField(source="user.is_active", read_only=True)
+    is_owner_approved = serializers.BooleanField(source="is_verified", read_only=True)
+
+    class Meta:
+        model = Owner
+        fields = [
+            "email",
+            "full_name",
+            "role",
+            "phone",
+            "address",
+            "profile_photo",
+            "is_email_verified",
+            "is_owner_approved",
+            "created_at",
+        ]
+
+
+class OwnerProfileUpdateSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(
+        source="user.first_name",
+        required=False
+    )
+
+    class Meta:
+        model = Owner
+        fields = [
+            "full_name",
+            "phone",
+            "address",
+            "profile_photo",
+        ]
+
+    def validate(self, attrs):
+        # Reject attempts to update restricted fields
+        forbidden_fields = set(self.initial_data.keys()) - set(self.fields.keys())
+        if forbidden_fields:
+            raise serializers.ValidationError(
+                f"Updating {', '.join(forbidden_fields)} is not allowed."
+            )
+        return attrs
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
+
+        if "first_name" in user_data:
+            instance.user.first_name = user_data["first_name"]
+            instance.user.save(update_fields=["first_name"])
+
+        return super().update(instance, validated_data)
