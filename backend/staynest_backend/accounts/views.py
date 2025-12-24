@@ -42,7 +42,10 @@ class LoginView(APIView):
 
         # Check email exists
         if not User.objects.filter(email=email).exists():
-            return Response({"error": "Invalid email"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid email"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = User.objects.get(email=email)
 
@@ -55,25 +58,37 @@ class LoginView(APIView):
 
         # Check password
         if not user.check_password(password):
-            return Response({"error": "Incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "Incorrect password"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
         refresh = RefreshToken.for_user(user)
 
-        return Response({
-            "message": "Login success",
-            "full_name": user.first_name,
-            "email": user.email,
-            "role": user.profile.role,
+        # 🔒 DERIVE ROLE SAFELY (ADMIN IS NOT STORED)
+        if user.is_staff or user.is_superuser:
+            role = "admin"
+        else:
+            role = user.profile.role
 
-            "profile_image": (
-                request.build_absolute_uri(user.owner.profile_photo.url)
-                if hasattr(user, "owner") and user.owner.profile_photo
-                else None
-            ),
+        return Response(
+            {
+                "message": "Login success",
+                "full_name": user.first_name,
+                "email": user.email,
+                "role": role,
 
-            "access_token": str(refresh.access_token),
-            "refresh_token": str(refresh),
-        }, status=status.HTTP_200_OK)
+                "profile_image": (
+                    request.build_absolute_uri(user.owner.profile_photo.url)
+                    if hasattr(user, "owner") and user.owner.profile_photo
+                    else None
+                ),
+
+                "access_token": str(refresh.access_token),
+                "refresh_token": str(refresh),
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 

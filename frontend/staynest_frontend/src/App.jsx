@@ -17,8 +17,6 @@ import OwnerRoute from "./routes/OwnerRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
-// import VerifyEmail from "./pages/VerifyEmail";
-
 import EmailSent from "./pages/EmailSent";
 import EmailActionResult from "./pages/EmailActionResult";
 
