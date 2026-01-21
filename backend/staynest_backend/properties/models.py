@@ -20,11 +20,13 @@ class Property(models.Model):
     ]
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="properties")
+    def __str__(self):
+        return self.property_name
 
     # Core identity
     property_name = models.CharField(max_length=255, db_index=True)
-    description = models.TextField()
-    rules_and_regulations = models.TextField()
+    description = models.TextField(blank=True)
+    rules_and_regulations = models.TextField(blank=True)
 
     # Demographics
     stay_type = models.CharField(
@@ -34,18 +36,18 @@ class Property(models.Model):
     preferred_occupants = models.JSONField()  # validated list
 
     # Location (locked module feeds these)
-    address_text = models.TextField()
-    area = models.CharField(max_length=255)
-    city = models.CharField(max_length=100, db_index=True)
-    state = models.CharField(max_length=100)
-    pincode = models.CharField(max_length=10)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    address_text = models.TextField(blank=True)
+    area = models.CharField(max_length=255,blank=True)
+    city = models.CharField(max_length=100, db_index=True, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    pincode = models.CharField(max_length=10, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
 
     # Amenities
-    is_ac = models.BooleanField()
-    parking_available = models.BooleanField()
-    food_provided = models.BooleanField()
+    is_ac = models.BooleanField(default=False)
+    parking_available = models.BooleanField(default=False)
+    food_provided = models.BooleanField(default=False)
 
     # Optional fields
     security_deposit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

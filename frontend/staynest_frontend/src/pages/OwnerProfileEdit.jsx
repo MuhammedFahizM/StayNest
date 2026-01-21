@@ -1,8 +1,190 @@
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
+// import { getOwnerProfile, updateOwnerProfile } from "../services/ownerService";
+// import { useNavigate } from "react-router-dom";
+// import { useContext } from "react";
+// import { AuthContext } from "../context/AuthContext";
+
+
+// export default function OwnerProfileEdit() {
+//     const [form, setForm] = useState({});
+//     const [file, setFile] = useState(null);
+//     const [loading, setLoading] = useState(false);
+//     const navigate = useNavigate();
+//     const { updateUser } = useContext(AuthContext);
+
+
+//     useEffect(() => {
+//         getOwnerProfile().then(setForm);
+//     }, []);
+
+//     const handleSubmit = async (e) => {
+//         e.preventDefault();
+//         setLoading(true);
+
+//         try {
+//             const data = new FormData();
+//             ["full_name", "phone", "address"].forEach(
+//                 (f) => form[f] && data.append(f, form[f])
+//             );
+//             if (file) data.append("profile_photo", file);
+
+//             await updateOwnerProfile(data);
+
+//             // 🔑 Fetch latest profile from backend
+//             const updatedProfile = await getOwnerProfile();
+
+//             // 🔑 Sync AuthContext (navbar updates instantly)
+//             updateUser({
+//                 full_name: updatedProfile.full_name,
+//                 profile_image: updatedProfile.profile_photo,
+//             });
+
+//             navigate("/owner/profile");
+//         } finally {
+//             setLoading(false);
+//         }
+//     };
+
+
+//     return (
+//         <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 pt-28 px-4">
+//             <div className="max-w-3xl mx-auto">
+
+//                 <form
+//                     onSubmit={handleSubmit}
+//                     className="bg-white/70 backdrop-blur-xl border border-white/70 rounded-2xl shadow-lg p-8"
+//                 >
+//                     <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+//                         Edit Profile
+//                     </h2>
+
+//                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+//                         {/* FULL NAME */}
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Full Name
+//                             </label>
+//                             <input
+//                                 type="text"
+//                                 value={form.full_name || ""}
+//                                 onChange={(e) =>
+//                                     setForm({ ...form, full_name: e.target.value })
+//                                 }
+//                                 className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
+//                             />
+//                         </div>
+
+//                         {/* EMAIL (READ-ONLY) */}
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Email
+//                             </label>
+//                             <input
+//                                 type="email"
+//                                 value={form.email || ""}
+//                                 disabled
+//                                 className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed"
+//                             />
+//                         </div>
+
+//                         {/* PHONE */}
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Phone
+//                             </label>
+//                             <input
+//                                 type="text"
+//                                 value={form.phone || ""}
+//                                 onChange={(e) =>
+//                                     setForm({ ...form, phone: e.target.value })
+//                                 }
+//                                 className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
+//                             />
+//                         </div>
+
+//                         {/* STATUS (READ-ONLY) */}
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Account Status
+//                             </label>
+//                             <input
+//                                 type="text"
+//                                 value={
+//                                     form.is_owner_approved ? "Approved" : "Pending Approval"
+//                                 }
+//                                 disabled
+//                                 className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed"
+//                             />
+//                         </div>
+
+//                         {/* ADDRESS */}
+//                         <div className="md:col-span-2">
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Address
+//                             </label>
+//                             <textarea
+//                                 rows={3}
+//                                 value={form.address || ""}
+//                                 onChange={(e) =>
+//                                     setForm({ ...form, address: e.target.value })
+//                                 }
+//                                 className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
+//                             />
+//                         </div>
+
+//                         {/* PROFILE PHOTO */}
+//                         <div className="md:col-span-2">
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Profile Photo
+//                             </label>
+//                             <input
+//                                 type="file"
+//                                 onChange={(e) => setFile(e.target.files[0])}
+//                                 className="w-full text-sm"
+//                             />
+//                             <p className="text-xs text-gray-500 mt-1">
+//                                 JPG or PNG. Square images work best.
+//                             </p>
+//                         </div>
+//                     </div>
+
+//                     {/* ACTIONS */}
+//                     <div className="mt-8 flex items-center gap-4">
+//                         <button
+//                             type="submit"
+//                             disabled={loading}
+//                             className="
+//                 px-6 py-2 rounded-xl
+//                 bg-blue-500 text-white font-semibold
+//                 hover:bg-blue-600 transition
+//                 disabled:opacity-50
+//               "
+//                         >
+//                             {loading ? "Saving..." : "Save Changes"}
+//                         </button>
+
+//                         <button
+//                             type="button"
+//                             onClick={() => navigate("/owner/profile")}
+//                             className="text-gray-600 hover:underline"
+//                         >
+//                             Cancel
+//                         </button>
+//                     </div>
+//                 </form>
+
+//             </div>
+//         </div>
+//     );
+// }
+
+
+import { useState, useEffect, useContext } from "react";
 import { getOwnerProfile, updateOwnerProfile } from "../services/ownerService";
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 
 export default function OwnerProfileEdit() {
@@ -11,7 +193,6 @@ export default function OwnerProfileEdit() {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { updateUser } = useContext(AuthContext);
-
 
     useEffect(() => {
         getOwnerProfile().then(setForm);
@@ -30,150 +211,131 @@ export default function OwnerProfileEdit() {
 
             await updateOwnerProfile(data);
 
-            // 🔑 Fetch latest profile from backend
             const updatedProfile = await getOwnerProfile();
 
-            // 🔑 Sync AuthContext (navbar updates instantly)
             updateUser({
                 full_name: updatedProfile.full_name,
                 profile_image: updatedProfile.profile_photo,
             });
 
+            /* ✅ SUCCESS TOAST */
+            toast.success("Profile updated successfully");
+
             navigate("/owner/profile");
+
         } finally {
             setLoading(false);
         }
     };
 
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 pt-28 px-4">
-            <div className="max-w-3xl mx-auto">
-
+        <div className="min-vh-100 pt-5 px-3">
+            <div className="container pt-5">
                 <form
                     onSubmit={handleSubmit}
-                    className="bg-white/70 backdrop-blur-xl border border-white/70 rounded-2xl shadow-lg p-8"
+                    className="card shadow border rounded-3 position-relative p-4 mx-auto"
+                    style={{ maxWidth: "720px" }}
                 >
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+                    <h2 className="h4 fw-semibold text-dark mb-4">
                         Edit Profile
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="row g-3">
 
                         {/* FULL NAME */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name
-                            </label>
+                        <div className="col-12 col-md-6">
+                            <label className="form-label fw-medium">Full Name</label>
                             <input
                                 type="text"
+                                className="form-control"
                                 value={form.full_name || ""}
                                 onChange={(e) =>
                                     setForm({ ...form, full_name: e.target.value })
                                 }
-                                className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
                             />
                         </div>
 
-                        {/* EMAIL (READ-ONLY) */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Email
-                            </label>
+                        {/* EMAIL */}
+                        <div className="col-12 col-md-6">
+                            <label className="form-label fw-medium">Email</label>
                             <input
                                 type="email"
+                                className="form-control"
                                 value={form.email || ""}
                                 disabled
-                                className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed"
                             />
                         </div>
 
                         {/* PHONE */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone
-                            </label>
+                        <div className="col-12 col-md-6">
+                            <label className="form-label fw-medium">Phone</label>
                             <input
                                 type="text"
+                                className="form-control"
                                 value={form.phone || ""}
                                 onChange={(e) =>
                                     setForm({ ...form, phone: e.target.value })
                                 }
-                                className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
                             />
                         </div>
 
-                        {/* STATUS (READ-ONLY) */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Account Status
-                            </label>
+                        {/* STATUS */}
+                        <div className="col-12 col-md-6">
+                            <label className="form-label fw-medium">Account Status</label>
                             <input
                                 type="text"
-                                value={
-                                    form.is_owner_approved ? "Approved" : "Pending Approval"
-                                }
+                                className="form-control"
+                                value={form.is_owner_approved ? "Approved" : "Pending Approval"}
                                 disabled
-                                className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed"
                             />
                         </div>
 
                         {/* ADDRESS */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Address
-                            </label>
+                        <div className="col-12">
+                            <label className="form-label fw-medium">Address</label>
                             <textarea
                                 rows={3}
+                                className="form-control"
                                 value={form.address || ""}
                                 onChange={(e) =>
                                     setForm({ ...form, address: e.target.value })
                                 }
-                                className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
                             />
                         </div>
 
                         {/* PROFILE PHOTO */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Profile Photo
-                            </label>
+                        <div className="col-12">
+                            <label className="form-label fw-medium">Profile Photo</label>
                             <input
                                 type="file"
+                                className="form-control"
                                 onChange={(e) => setFile(e.target.files[0])}
-                                className="w-full text-sm"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <small className="text-muted">
                                 JPG or PNG. Square images work best.
-                            </p>
+                            </small>
                         </div>
                     </div>
 
                     {/* ACTIONS */}
-                    <div className="mt-8 flex items-center gap-4">
+                    <div className="mt-4 d-flex gap-3">
                         <button
                             type="submit"
+                            className="btn btn-primary"
                             disabled={loading}
-                            className="
-                px-6 py-2 rounded-xl
-                bg-blue-500 text-white font-semibold
-                hover:bg-blue-600 transition
-                disabled:opacity-50
-              "
                         >
                             {loading ? "Saving..." : "Save Changes"}
                         </button>
 
                         <button
                             type="button"
+                            className="btn btn-link text-secondary"
                             onClick={() => navigate("/owner/profile")}
-                            className="text-gray-600 hover:underline"
                         >
                             Cancel
                         </button>
                     </div>
                 </form>
-
             </div>
         </div>
     );

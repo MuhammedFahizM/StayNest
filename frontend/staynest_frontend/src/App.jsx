@@ -28,10 +28,11 @@ import OwnerProfileEdit from "./pages/OwnerProfileEdit";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200">
+    <div className="min-vh-100 bg-white">
       <Router>
         <Navbar />
-        <div className="pt-24">   {/* ← adds spacing below navbar */}
+        <div style={{ paddingTop: "96px", paddingBottom: "120px" }}>
+          {/* ← adds spacing below navbar */}
 
           <Routes>
             {/* PUBLIC ROUTES */}
@@ -40,7 +41,6 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/properties" element={<PropertyList />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
-            {/* <Route path="/verify-email/:token" element={<VerifyEmail />} /> */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             {/* Email flows */}
@@ -50,6 +50,41 @@ function App() {
             {/* Keep existing verify-email link working */}
             <Route path="/verify-email/:token" element={<EmailActionResult />} />
 
+            <Route
+              path="/owner/properties"
+              element={
+                <OwnerRoute>
+                  <PropertyList />
+                </OwnerRoute>
+              }
+            />
+
+            <Route
+              path="/owner/properties/new"
+              element={
+                <OwnerRoute>
+                  <PropertyDetails />
+                </OwnerRoute>
+              }
+            />
+
+            <Route
+              path="/owner/properties/:id"
+              element={
+                <OwnerRoute>
+                  <PropertyDetails />
+                </OwnerRoute>
+              }
+            />
+
+            <Route
+              path="/owner/properties/:id/edit"
+              element={
+                <OwnerRoute>
+                  <PropertyDetails />
+                </OwnerRoute>
+              }
+            />
 
 
             {/* USER PROTECTED ROUTES */}

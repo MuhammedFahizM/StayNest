@@ -1,3 +1,209 @@
+// // src/pages/EmailActionResult.jsx
+// import { useEffect, useState } from "react";
+// import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
+// import api from "../services/api";
+
+// function useQuery() {
+//   return new URLSearchParams(useLocation().search);
+// }
+
+// export default function EmailActionResult() {
+//   const navigate = useNavigate();
+//   const params = useParams(); // possible token from /verify-email/:token
+//   const query = useQuery();
+//   const qType = query.get("type"); // optional query param
+//   const token = params.token || query.get("token") || null;
+
+//   const [status, setStatus] = useState("loading"); // loading | success | failed
+//   const [message, setMessage] = useState("");
+//   const [resendState, setResendState] = useState({ busy: false, info: null });
+
+//   // Determine action
+//   // If route is /verify-email/:token => action = "verify"
+//   // If query type is "reset-success" => action = "reset-success" (no API)
+//   // If query type is "reset-failed" => action = "reset-failed" (no API)
+//   const action = params.token ? "verify" : qType || null;
+
+//   useEffect(() => {
+//     // If action is verify, call API once (guarded)
+//     let cancelled = false;
+//     async function verifyOnce() {
+//       if (!token) {
+//         setStatus("failed");
+//         setMessage("Missing token.");
+//         return;
+//       }
+
+//       try {
+//         await api.get(`/accounts/verify-email/${token}/`);
+//         if (cancelled) return;
+//         setStatus("success");
+//         setMessage("Email verified successfully.");
+//       } catch (err) {
+//         if (cancelled) return;
+//         setStatus("failed");
+//         const errMsg =
+//           err?.response?.data?.message ||
+//           err?.response?.data?.error ||
+//           "Invalid or expired link.";
+//         setMessage(errMsg);
+//       }
+//     }
+
+//     // If this is a direct success page for reset, set success immediately
+//     if (action === "reset-success") {
+//       setStatus("success");
+//       setMessage("Password reset successful.");
+//       // auto redirect to login after 1.5s
+//       const t = setTimeout(() => navigate("/login"), 1500);
+//       return () => clearTimeout(t);
+//     }
+
+//     // If reset-failed, simply show failure state
+//     if (action === "reset-failed") {
+//       setStatus("failed");
+//       setMessage("Reset link invalid or expired. Request a new reset link.");
+//       return;
+//     }
+
+//     if (action === "verify") {
+//       verifyOnce();
+//     } else {
+//       // Unknown action => show failed
+//       setStatus("failed");
+//       setMessage("Invalid action.");
+//     }
+
+//     return () => {
+//       cancelled = true;
+//     };
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [action, token, qType]);
+
+//   // Resend verification: we may need the user's email. If not available, we show a small input.
+//   async function handleResendVerification(emailInput) {
+//     setResendState({ busy: true, info: null });
+//     try {
+//       const payload = emailInput ? { email: emailInput } : {};
+//       const res = await api.post("/accounts/resend-verification/", payload);
+//       setResendState({ busy: false, info: res.data?.message || "Resent." });
+//     } catch (err) {
+//       const msg =
+//         err?.response?.data?.message ||
+//         err?.response?.data?.error ||
+//         "Unable to resend verification. Please re-register or contact support.";
+//       setResendState({ busy: false, info: msg });
+//     }
+//   }
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 px-4 py-12">
+//       <div className="pt-24 w-full max-w-xl">
+//         <div className="backdrop-blur-xl bg-white/60 border border-white/70 shadow-xl rounded-2xl p-8 text-center">
+//           {status === "loading" && (
+//             <p className="text-gray-700 text-lg font-medium">Processing…</p>
+//           )}
+
+//           {status === "success" && (
+//             <>
+//               <div className="flex items-center justify-center mb-4">
+//                 <svg className="w-16 h-16 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+//                   <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+//                 </svg>
+//               </div>
+
+//               <h2 className="text-2xl font-semibold text-gray-800 mb-2">Success</h2>
+//               <p className="text-gray-700 mb-6">{message}</p>
+
+//               {/* If verify success: manual Continue to login */}
+//               {action === "verify" && (
+//                 <Link
+//                   to="/login"
+//                   className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-medium shadow hover:bg-blue-700 transition"
+//                 >
+//                   Continue to Login
+//                 </Link>
+//               )}
+
+//               {/* reset-success auto-redirect handled above */}
+//             </>
+//           )}
+
+//           {status === "failed" && (
+//             <>
+//               <div className="flex items-center justify-center mb-4">
+//                 <svg className="w-16 h-16 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+//                   <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+//                 </svg>
+//               </div>
+
+//               <h2 className="text-2xl font-semibold text-gray-800 mb-2">Link invalid or expired</h2>
+//               <p className="text-gray-700 mb-4">{message}</p>
+
+//               {/* If verification failed: allow resend (with optional email input) */}
+//               {action === "verify" && (
+//                 <div className="space-y-3">
+//                   <ResendVerificationForm onResend={handleResendVerification} busy={resendState.busy} info={resendState.info} />
+//                   <div className="flex justify-center gap-3">
+//                     <Link to="/register" className="px-4 py-2 rounded-md border bg-white text-gray-800 hover:bg-gray-50">
+//                       Re-register
+//                     </Link>
+//                     <Link to="/login" className="px-4 py-2 rounded-md border bg-white text-gray-800 hover:bg-gray-50">
+//                       Back to login
+//                     </Link>
+//                   </div>
+//                 </div>
+//               )}
+
+//               {/* If reset failed: ask user to request new reset link */}
+//               {action === "reset-failed" && (
+//                 <div className="flex justify-center gap-3">
+//                   <Link to="/forgot-password" className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+//                     Request new reset link
+//                   </Link>
+//                   <Link to="/login" className="px-4 py-2 rounded-md border bg-white text-gray-800 hover:bg-gray-50">
+//                     Back to login
+//                   </Link>
+//                 </div>
+//               )}
+//             </>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// // Small form component for resend; allows entering email if needed
+// function ResendVerificationForm({ onResend, busy, info }) {
+//   const [email, setEmail] = useState("");
+
+//   return (
+//     <div className="w-full">
+//       <label className="block text-sm font-medium text-gray-700 mb-1">Enter email to resend verification</label>
+//       <div className="flex gap-2">
+//         <input
+//           value={email}
+//           onChange={(e) => setEmail(e.target.value)}
+//           placeholder="you@example.com"
+//           className="flex-1 p-3 rounded-lg border border-gray-300 bg-white/80"
+//         />
+//         <button
+//           onClick={() => onResend(email)}
+//           disabled={busy || !email}
+//           className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50"
+//         >
+//           {busy ? "Sending..." : "Resend"}
+//         </button>
+//       </div>
+
+//       {info && <p className="text-sm text-gray-700 mt-2">{info}</p>}
+//     </div>
+//   );
+// }
+
+
+
 // src/pages/EmailActionResult.jsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
@@ -9,24 +215,21 @@ function useQuery() {
 
 export default function EmailActionResult() {
   const navigate = useNavigate();
-  const params = useParams(); // possible token from /verify-email/:token
+  const params = useParams();
   const query = useQuery();
-  const qType = query.get("type"); // optional query param
+
+  const qType = query.get("type");
   const token = params.token || query.get("token") || null;
 
   const [status, setStatus] = useState("loading"); // loading | success | failed
   const [message, setMessage] = useState("");
   const [resendState, setResendState] = useState({ busy: false, info: null });
 
-  // Determine action
-  // If route is /verify-email/:token => action = "verify"
-  // If query type is "reset-success" => action = "reset-success" (no API)
-  // If query type is "reset-failed" => action = "reset-failed" (no API)
   const action = params.token ? "verify" : qType || null;
 
   useEffect(() => {
-    // If action is verify, call API once (guarded)
     let cancelled = false;
+
     async function verifyOnce() {
       if (!token) {
         setStatus("failed");
@@ -42,24 +245,21 @@ export default function EmailActionResult() {
       } catch (err) {
         if (cancelled) return;
         setStatus("failed");
-        const errMsg =
+        setMessage(
           err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          "Invalid or expired link.";
-        setMessage(errMsg);
+            err?.response?.data?.error ||
+            "Invalid or expired link."
+        );
       }
     }
 
-    // If this is a direct success page for reset, set success immediately
     if (action === "reset-success") {
       setStatus("success");
       setMessage("Password reset successful.");
-      // auto redirect to login after 1.5s
       const t = setTimeout(() => navigate("/login"), 1500);
       return () => clearTimeout(t);
     }
 
-    // If reset-failed, simply show failure state
     if (action === "reset-failed") {
       setStatus("failed");
       setMessage("Reset link invalid or expired. Request a new reset link.");
@@ -69,7 +269,6 @@ export default function EmailActionResult() {
     if (action === "verify") {
       verifyOnce();
     } else {
-      // Unknown action => show failed
       setStatus("failed");
       setMessage("Invalid action.");
     }
@@ -77,127 +276,138 @@ export default function EmailActionResult() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action, token, qType]);
+  }, [action, token, navigate]);
 
-  // Resend verification: we may need the user's email. If not available, we show a small input.
   async function handleResendVerification(emailInput) {
     setResendState({ busy: true, info: null });
+
     try {
       const payload = emailInput ? { email: emailInput } : {};
       const res = await api.post("/accounts/resend-verification/", payload);
-      setResendState({ busy: false, info: res.data?.message || "Resent." });
+      setResendState({
+        busy: false,
+        info: res.data?.message || "Verification email resent.",
+      });
     } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        "Unable to resend verification. Please re-register or contact support.";
-      setResendState({ busy: false, info: msg });
+      setResendState({
+        busy: false,
+        info:
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "Unable to resend verification. Please re-register or contact support.",
+      });
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 px-4 py-12">
-      <div className="pt-24 w-full max-w-xl">
-        <div className="backdrop-blur-xl bg-white/60 border border-white/70 shadow-xl rounded-2xl p-8 text-center">
-          {status === "loading" && (
-            <p className="text-gray-700 text-lg font-medium">Processing…</p>
-          )}
+    <div className="min-vh-100 bg-white d-flex justify-content-center pt-5">
+      <div className="container pt-5" style={{ maxWidth: 600 }}>
+        <div className="card shadow-sm text-center">
+          <div className="card-body p-4">
 
-          {status === "success" && (
-            <>
-              <div className="flex items-center justify-center mb-4">
-                <svg className="w-16 h-16 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
+            {status === "loading" && (
+              <p className="fw-medium text-muted">Processing…</p>
+            )}
 
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Success</h2>
-              <p className="text-gray-700 mb-6">{message}</p>
+            {status === "success" && (
+              <>
+                <div className="mb-3">
+                  <i className="bi bi-check-circle-fill text-success fs-1"></i>
+                </div>
 
-              {/* If verify success: manual Continue to login */}
-              {action === "verify" && (
-                <Link
-                  to="/login"
-                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-medium shadow hover:bg-blue-700 transition"
-                >
-                  Continue to Login
-                </Link>
-              )}
+                <h4 className="fw-semibold mb-2">Success</h4>
+                <p className="text-muted mb-4">{message}</p>
 
-              {/* reset-success auto-redirect handled above */}
-            </>
-          )}
+                {action === "verify" && (
+                  <Link to="/login" className="btn btn-primary">
+                    Continue to Login
+                  </Link>
+                )}
+              </>
+            )}
 
-          {status === "failed" && (
-            <>
-              <div className="flex items-center justify-center mb-4">
-                <svg className="w-16 h-16 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
+            {status === "failed" && (
+              <>
+                <div className="mb-3">
+                  <i className="bi bi-x-circle-fill text-danger fs-1"></i>
+                </div>
 
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Link invalid or expired</h2>
-              <p className="text-gray-700 mb-4">{message}</p>
+                <h4 className="fw-semibold mb-2">
+                  Link invalid or expired
+                </h4>
+                <p className="text-muted mb-4">{message}</p>
 
-              {/* If verification failed: allow resend (with optional email input) */}
-              {action === "verify" && (
-                <div className="space-y-3">
-                  <ResendVerificationForm onResend={handleResendVerification} busy={resendState.busy} info={resendState.info} />
-                  <div className="flex justify-center gap-3">
-                    <Link to="/register" className="px-4 py-2 rounded-md border bg-white text-gray-800 hover:bg-gray-50">
-                      Re-register
+                {action === "verify" && (
+                  <>
+                    <ResendVerificationForm
+                      onResend={handleResendVerification}
+                      busy={resendState.busy}
+                      info={resendState.info}
+                    />
+
+                    <div className="d-flex justify-content-center gap-2 mt-3">
+                      <Link to="/register" className="btn btn-outline-secondary">
+                        Re-register
+                      </Link>
+                      <Link to="/login" className="btn btn-outline-secondary">
+                        Back to login
+                      </Link>
+                    </div>
+                  </>
+                )}
+
+                {action === "reset-failed" && (
+                  <div className="d-flex justify-content-center gap-2">
+                    <Link
+                      to="/forgot-password"
+                      className="btn btn-primary"
+                    >
+                      Request new reset link
                     </Link>
-                    <Link to="/login" className="px-4 py-2 rounded-md border bg-white text-gray-800 hover:bg-gray-50">
+                    <Link to="/login" className="btn btn-outline-secondary">
                       Back to login
                     </Link>
                   </div>
-                </div>
-              )}
+                )}
+              </>
+            )}
 
-              {/* If reset failed: ask user to request new reset link */}
-              {action === "reset-failed" && (
-                <div className="flex justify-center gap-3">
-                  <Link to="/forgot-password" className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                    Request new reset link
-                  </Link>
-                  <Link to="/login" className="px-4 py-2 rounded-md border bg-white text-gray-800 hover:bg-gray-50">
-                    Back to login
-                  </Link>
-                </div>
-              )}
-            </>
-          )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Small form component for resend; allows entering email if needed
+// Small form component for resend
 function ResendVerificationForm({ onResend, busy, info }) {
   const [email, setEmail] = useState("");
 
   return (
-    <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700 mb-1">Enter email to resend verification</label>
-      <div className="flex gap-2">
+    <div className="text-start">
+      <label className="form-label">
+        Enter email to resend verification
+      </label>
+
+      <div className="input-group mb-2">
         <input
+          type="email"
+          className="form-control"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="flex-1 p-3 rounded-lg border border-gray-300 bg-white/80"
         />
         <button
-          onClick={() => onResend(email)}
+          type="button"
+          className="btn btn-primary"
           disabled={busy || !email}
-          className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50"
+          onClick={() => onResend(email)}
         >
           {busy ? "Sending..." : "Resend"}
         </button>
       </div>
 
-      {info && <p className="text-sm text-gray-700 mt-2">{info}</p>}
+      {info && <div className="alert alert-secondary py-2">{info}</div>}
     </div>
   );
 }

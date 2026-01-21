@@ -17,13 +17,32 @@ from .models import (
 class SharingOptionInline(admin.TabularInline):
     model = SharingOption
     extra = 0
-    readonly_fields = ("available_beds",)
-    can_delete = False
+    readonly_fields = (
+        "sharing_type",
+        "total_beds",
+        "rent_amount",
+        "available_beds",
+    )
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 
 class PropertyImageInline(admin.TabularInline):
     model = PropertyImage
     extra = 0
+    readonly_fields = ("image",)
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 
 # -----------------------------------
@@ -42,6 +61,9 @@ class PropertyAdmin(admin.ModelAdmin):
         "is_ac",
         "created_at",
     )
+
+    list_display_links = ("property_name",)
+
 
     list_filter = (
         "status",
@@ -108,6 +130,22 @@ class PropertyAdmin(admin.ModelAdmin):
             "fields": ("created_at", "updated_at")
         }),
     )
+
+    readonly_fields = [
+        field.name
+        for field in Property._meta.fields
+        if field.name not in ("status", "rejection_reason")
+    ]   
+
+
+    def has_change_permission(self, request, obj=None):
+        return True  # allow opening
+
+    def has_add_permission(self, request):
+        return False  # admin should not create properties
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # no hard deletes
 
 
 # -----------------------------------

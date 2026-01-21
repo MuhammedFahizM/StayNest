@@ -34,7 +34,7 @@ api.interceptors.response.use(
     // If token expired AND we haven't retried yet
     if (
       error.response?.status === 401 &&
-      error.response?.data?.code === "token_not_valid" &&
+      // error.response?.data?.code === "token_not_valid" &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;

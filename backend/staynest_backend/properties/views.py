@@ -11,12 +11,14 @@ from .models import Property, PropertyAuditLog, PropertyImage
 from .serializers import PropertySerializer
 from django.shortcuts import get_object_or_404
 from .serializers import PropertyImageUploadSerializer
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser , JSONParser
+from django.db import transaction
+
 
 class OwnerPropertyViewSet(viewsets.ModelViewSet):
     serializer_class = PropertySerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Property.objects.filter(
@@ -124,6 +126,25 @@ class OwnerPropertyViewSet(viewsets.ModelViewSet):
             {"status": "image_deleted"},
             status=status.HTTP_200_OK
         )
+
+    @action(detail=True, methods=["delete"])
+    def delete(self, request, pk=None):
+        prop = self.get_object()
+
+        with transaction.atomic():
+            # delete related data explicitly
+            prop.images.all().delete()
+            prop.sharing_options.all().delete()
+            PropertyAuditLog.objects.filter(property=prop).delete()
+
+            # finally delete property
+            prop.delete()
+
+        return Response(
+            {"status": "property_deleted"},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
 
 
 

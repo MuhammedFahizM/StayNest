@@ -71,6 +71,38 @@ class PropertySerializer(serializers.ModelSerializer):
             )
 
         return prop
+    def update(self, instance, validated_data):
+        sharing_data = validated_data.pop("sharing_options", None)
+
+    # Update normal Property fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+    # Handle sharing options update
+        if sharing_data is not None:
+            existing = {
+                opt.sharing_type: opt
+                for opt in instance.sharing_options.all()
+            }
+
+            for s in sharing_data:
+                opt = existing.get(s["sharing_type"])
+                if opt:
+                    opt.total_beds = s["total_beds"]
+                    opt.rent_amount = s["rent_amount"]
+                    opt.available_beds = s["total_beds"]
+                    opt.save()
+                else:
+                    SharingOption.objects.create(
+                        property=instance,
+                        available_beds=s["total_beds"],
+                        **s
+                    )
+
+
+        return instance
 
 
 # =========================
