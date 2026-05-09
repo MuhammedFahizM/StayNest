@@ -1,9 +1,70 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'); */
+@import "leaflet/dist/leaflet.css";
+
 @import "tailwindcss";
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+@import "./styles/tokens.css";
+@import "./styles/animations.css";
+@import "./styles/utilities.css";
+@import "./styles/components.css";
+
+/* Global Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sn-font);
+  background: var(--sn-bg);
+  color: var(--sn-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Better media defaults */
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* Inputs inherit font */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Selection */
+::selection {
+  background: rgba(16, 185, 129, 0.18);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

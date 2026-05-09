@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function ImageLightbox({
   images,
@@ -9,59 +10,311 @@ export default function ImageLightbox({
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") onChange(currentIndex - 1);
-      if (e.key === "ArrowRight") onChange(currentIndex + 1);
+
+      if (
+        e.key === "ArrowLeft" &&
+        currentIndex > 0
+      ) {
+        onChange(currentIndex - 1);
+      }
+
+      if (
+        e.key === "ArrowRight" &&
+        currentIndex < images.length - 1
+      ) {
+        onChange(currentIndex + 1);
+      }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [currentIndex, onClose, onChange]);
+
+    const prevOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    window.addEventListener(
+      "keydown",
+      handleKey
+    );
+
+    return () => {
+      document.body.style.overflow =
+        prevOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleKey
+      );
+    };
+  }, [
+    currentIndex,
+    images.length,
+    onClose,
+    onChange,
+  ]);
 
   if (!images?.length) return null;
 
-  return (
-    <div
-      className="position-fixed top-0 start-0 w-100 h-100"
-      style={{ background: "rgba(0,0,0,0.85)", zIndex: 1050 }}
-      onClick={onClose}
-    >
-      <div
-        className="d-flex align-items-center justify-content-center h-100"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Prev */}
-        <button
-          className="btn btn-light position-absolute start-0 ms-3"
-          disabled={currentIndex === 0}
-          onClick={() => onChange(currentIndex - 1)}
-        >
-          ‹
-        </button>
+  const canPrev =
+    currentIndex > 0;
 
-        {/* Image */}
+  const canNext =
+    currentIndex <
+    images.length - 1;
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background:
+          "rgba(12,12,12,.72)",
+        backdropFilter:
+          "blur(10px)",
+        display: "flex",
+        alignItems:
+          "center",
+        justifyContent:
+          "center",
+        padding:
+          "32px 24px",
+        animation:
+          "fadeIn .22s ease",
+      }}
+    >
+      {/* Close */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        style={iconBtn({
+          top: 20,
+          right: 20,
+        })}
+      >
+        <i className="bi bi-x-lg" />
+      </button>
+
+      {/* Prev */}
+      {canPrev && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onChange(
+              currentIndex - 1
+            );
+          }}
+          style={iconBtn({
+            left: 26,
+            top: "50%",
+            transform:
+              "translateY(-50%)",
+          })}
+        >
+          <i className="bi bi-chevron-left" />
+        </button>
+      )}
+
+      {/* Main Image */}
+      <div
+        onClick={(e) =>
+          e.stopPropagation()
+        }
+        style={{
+          display: "flex",
+          flexDirection:
+            "column",
+          alignItems:
+            "center",
+          gap: 18,
+          width: "100%",
+        }}
+      >
         <img
-          src={images[currentIndex]}
+          src={
+            images[
+              currentIndex
+            ]
+          }
           alt=""
-          className="img-fluid rounded shadow"
-          style={{ maxHeight: "85vh" }}
+          style={{
+            width: "980px",
+            height: "560px",
+            maxWidth:
+              "84vw",
+            maxHeight:
+              "74vh",
+            objectFit:
+              "contain",
+            borderRadius: 18,
+            display:
+              "block",
+            boxShadow:
+              "0 35px 90px rgba(0,0,0,.34)",
+            animation:
+              "zoomFade .22s ease",
+          }}
         />
 
-        {/* Next */}
-        <button
-          className="btn btn-light position-absolute end-0 me-3"
-          disabled={currentIndex === images.length - 1}
-          onClick={() => onChange(currentIndex + 1)}
-        >
-          ›
-        </button>
-
-        {/* Close */}
-        <button
-          className="btn btn-danger position-absolute top-0 end-0 m-3"
-          onClick={onClose}
-        >
-          ✕
-        </button>
+        {/* Thumbnail Strip */}
+        {images.length >
+          1 && (
+          <div
+            style={{
+              display:
+                "flex",
+              gap: 10,
+              overflowX:
+                "auto",
+              padding:
+                "4px 4px 8px",
+              maxWidth:
+                "84vw",
+              scrollbarWidth:
+                "none",
+            }}
+          >
+            {images.map(
+              (
+                img,
+                index
+              ) => (
+                <img
+                  key={
+                    index
+                  }
+                  src={
+                    img
+                  }
+                  alt=""
+                  onClick={() =>
+                    onChange(
+                      index
+                    )
+                  }
+                  style={{
+                    width: 78,
+                    height: 54,
+                    objectFit:
+                      "cover",
+                    borderRadius: 10,
+                    cursor:
+                      "pointer",
+                    border:
+                      index ===
+                      currentIndex
+                        ? "2px solid #10b981"
+                        : "2px solid transparent",
+                    opacity:
+                      index ===
+                      currentIndex
+                        ? 1
+                        : 0.72,
+                    transition:
+                      "all .18s ease",
+                    flexShrink: 0,
+                  }}
+                />
+              )
+            )}
+          </div>
+        )}
       </div>
-    </div>
+
+      {/* Next */}
+      {canNext && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onChange(
+              currentIndex + 1
+            );
+          }}
+          style={iconBtn({
+            right: 26,
+            top: "50%",
+            transform:
+              "translateY(-50%)",
+          })}
+        >
+          <i className="bi bi-chevron-right" />
+        </button>
+      )}
+
+      {/* Counter */}
+      <div
+        style={{
+          position:
+            "absolute",
+          bottom: 20,
+          left: "50%",
+          transform:
+            "translateX(-50%)",
+          padding:
+            "8px 14px",
+          borderRadius: 999,
+          background:
+            "rgba(255,255,255,.12)",
+          color: "#fff",
+          fontSize:
+            ".88rem",
+          fontWeight: 600,
+          backdropFilter:
+            "blur(12px)",
+        }}
+      >
+        {currentIndex + 1} /{" "}
+        {images.length}
+      </div>
+
+      {/* Animations */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+
+          @keyframes zoomFade {
+            from {
+              opacity: 0;
+              transform: scale(.96);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+        `}
+      </style>
+    </div>,
+    document.body
   );
+}
+
+function iconBtn(pos) {
+  return {
+    position: "absolute",
+    width: 48,
+    height: 48,
+    border: "none",
+    borderRadius: "50%",
+    background:
+      "rgba(255,255,255,.12)",
+    color: "#fff",
+    display: "grid",
+    placeItems: "center",
+    cursor: "pointer",
+    fontSize: 20,
+    backdropFilter:
+      "blur(10px)",
+    boxShadow:
+      "0 10px 30px rgba(0,0,0,.18)",
+    transition:
+      "all .18s ease",
+    ...pos,
+  };
 }

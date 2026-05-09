@@ -1,0 +1,211 @@
+/* =========================================
+   STAYNEST COMPONENT SYSTEM
+========================================= */
+
+/* ---------------- Buttons ---------------- */
+
+.btn {
+  border-radius: var(--sn-radius-sm);
+  font-weight: 700;
+  font-size: var(--sn-fs-sm);
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  transition:
+    transform var(--sn-speed) var(--sn-ease),
+    background var(--sn-speed) ease,
+    border-color var(--sn-speed) ease,
+    box-shadow var(--sn-speed) ease,
+    color var(--sn-speed) ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(16, 185, 129, 0.18);
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: var(--sn-primary);
+  border-color: var(--sn-primary);
+  color: #fff;
+  box-shadow:
+    0 10px 24px rgba(16, 185, 129, 0.18);
+}
+
+.btn-primary:hover {
+  background: var(--sn-primary-hover);
+  border-color: var(--sn-primary-hover);
+  color: #fff;
+}
+
+.btn-outline-primary {
+  background: #fff;
+  color: var(--sn-primary);
+  border-color: var(--sn-primary);
+}
+
+.btn-outline-primary:hover {
+  background: var(--sn-primary);
+  color: #fff;
+}
+
+.btn-dark {
+  background: var(--sn-dark);
+  color: #fff;
+  border-color: var(--sn-dark);
+}
+
+/* ---------------- Forms ---------------- */
+
+.form-control,
+.form-select,
+textarea {
+  min-height: 46px;
+  border-radius: var(--sn-radius-sm);
+  border: 1px solid var(--sn-border);
+  background: #fff;
+  color: var(--sn-text);
+  font-size: var(--sn-fs-sm);
+  transition:
+    border-color var(--sn-speed) ease,
+    box-shadow var(--sn-speed) ease;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus {
+  border-color: var(--sn-primary);
+  box-shadow:
+    0 0 0 4px rgba(16, 185, 129, 0.14);
+  outline: none;
+}
+
+.form-control::placeholder,
+textarea::placeholder {
+  color: var(--sn-text-muted);
+}
+
+/* ---------------- Cards ---------------- */
+
+.card {
+  border: 1px solid var(--sn-border) !important;
+  border-radius: var(--sn-radius-lg) !important;
+  background: #fff;
+  box-shadow: var(--sn-shadow-sm);
+  overflow: hidden;
+}
+
+.card-hover,
+.sn-card {
+  transition:
+    transform var(--sn-speed-slow) var(--sn-ease),
+    box-shadow var(--sn-speed-slow) ease,
+    border-color var(--sn-speed) ease;
+}
+
+.card-hover:hover,
+.sn-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--sn-shadow-lg);
+}
+
+/* ---------------- Badges ---------------- */
+
+.badge {
+  border-radius: var(--sn-radius-pill);
+  font-weight: 700;
+  padding: 6px 12px;
+  font-size: 0.76rem;
+}
+
+.sn-badge-soft {
+  background: var(--sn-primary-soft);
+  color: var(--sn-primary);
+}
+
+.sn-badge-success {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--sn-success);
+}
+
+.sn-badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--sn-warning);
+}
+
+.sn-badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--sn-danger);
+}
+
+/* ---------------- Tables ---------------- */
+
+table {
+  border-color: var(--sn-border);
+}
+
+thead th {
+  color: var(--sn-text-soft);
+  font-weight: 700;
+  font-size: var(--sn-fs-sm);
+}
+
+tbody td {
+  vertical-align: middle;
+}
+
+/* ---------------- Skeleton ---------------- */
+
+.placeholder {
+  border-radius: 12px !important;
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 25%,
+    #e2e8f0 50%,
+    #f1f5f9 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: sn-shimmer 1.35s linear infinite !important;
+}
+
+/* ---------------- Spinner ---------------- */
+
+.spinner-border {
+  color: var(--sn-primary) !important;
+}
+
+/* ---------------- Dropdown ---------------- */
+
+.dropdown-menu {
+  border-radius: 18px;
+  border: 1px solid var(--sn-border);
+  box-shadow: var(--sn-shadow-lg);
+  padding: 8px;
+}
+
+/* ---------------- Links ---------------- */
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+.no-caret::after {
+  display: none !important;
+}

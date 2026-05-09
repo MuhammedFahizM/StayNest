@@ -1,274 +1,669 @@
-// import { useState, useContext } from "react";
-// import { login } from "../services/authService";
-// import { AuthContext } from "../context/AuthContext";
-// import { useNavigate } from "react-router-dom";
-
-// export default function Login() {
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const { loginUser } = useContext(AuthContext);
-//   const navigate = useNavigate();
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setError("");
-
-//     try {
-//       const data = await login({
-//         email: email,
-//         password: password,
-//       });
-
-//       // Save user + token in AuthContext
-//       loginUser(data);
-
-//       alert("Login successful!");
-
-//       // Redirect based on role
-//       if (data.role === "owner") {
-//         navigate("/owner/dashboard");
-//       } else {
-//         navigate("/");
-//       }
-//     } catch (err) {
-//       setError("Invalid email or password");
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center 
-//                   bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 
-//                   px-4 py-8">
-
-//       <div className="
-//                       backdrop-blur-xl bg-white/60
-//                       border border-white/70
-//                       shadow-xl
-//                       rounded-2xl
-//                       p-8 w-full max-w-md
-//                       transition-all">
-
-//         {/* Heading */}
-//         <h2 className="text-3xl font-semibold text-gray-800 text-center mb-4 tracking-wide">
-//           Welcome Back
-//         </h2>
-//         <p className="text-gray-600 text-center text-sm mb-6">
-//           Log in to continue your StayNest experience
-//         </p>
-
-//         {/* Form */}
-//         <form onSubmit={handleSubmit} className="space-y-6">
-
-//           {/* Email */}
-//           <div>
-//             <label className="text-gray-700 font-medium text-sm mb-1 block">Email</label>
-//             <input
-//               type="email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               className="w-full p-3 rounded-lg bg-white/70 border border-gray-300 
-//                        text-gray-800 placeholder-gray-500 
-//                        focus:outline-none focus:ring-2 focus:ring-blue-400"
-//               placeholder="you@example.com"
-//               required
-//             />
-//           </div>
-
-//           {/* Password */}
-//           <div>
-//             <label className="text-gray-700 font-medium text-sm mb-1 block">Password</label>
-
-//             <div className="flex items-center bg-white/70 border border-gray-300 rounded-lg">
-//               <input
-//                 type={showPassword ? "text" : "password"}
-//                 value={password}
-//                 onChange={(e) => setPassword(e.target.value)}
-//                 className="w-full p-3 bg-transparent 
-//                          text-gray-800 placeholder-gray-500 
-//                          focus:outline-none"
-//                 placeholder="Enter your password"
-//                 required
-//               />
-
-//               <button
-//                 type="button"
-//                 onClick={() => setShowPassword(!showPassword)}
-//                 className="px-3 text-gray-600 hover:text-gray-800 transition"
-//               >
-//                 {showPassword ? (
-//                   // Eye-Off Icon
-//                   <svg xmlns="http://www.w3.org/2000/svg"
-//                     fill="none"
-//                     viewBox="0 0 24 24"
-//                     strokeWidth={1.5}
-//                     stroke="currentColor"
-//                     className="w-5 h-5">
-//                     <path strokeLinecap="round"
-//                       strokeLinejoin="round"
-//                       d="M3.98 8.223A10.45 10.45 0 0 0 1.5 12c2.1 4.5 6.3 7.5 10.5 7.5 1.95 0 3.9-.6 5.7-1.65M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-//                     <path strokeLinecap="round"
-//                       strokeLinejoin="round"
-//                       d="M6.23 6.23 3 3m18 18-3.23-3.23M15 12a3 3 0 0 0-3-3" />
-//                   </svg>
-//                 ) : (
-//                   // Eye Icon
-//                   <svg xmlns="http://www.w3.org/2000/svg"
-//                     fill="none"
-//                     viewBox="0 0 24 24"
-//                     strokeWidth={1.5}
-//                     stroke="currentColor"
-//                     className="w-5 h-5">
-//                     <path strokeLinecap="round"
-//                       strokeLinejoin="round"
-//                       d="M2.036 12.322C3.532 7.51 7.86 4.5 12 4.5c4.14 0 8.468 3.01 9.964 7.822a1.38 1.38 0 0 1 0 .856C20.468 16.49 16.14 19.5 12 19.5c-4.14 0-8.468-3.01-9.964-7.822a1.38 1.38 0 0 1 0-.856z" />
-//                     <path strokeLinecap="round"
-//                       strokeLinejoin="round"
-//                       d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-//                   </svg>
-//                 )}
-//               </button>
-
-//             </div>
-//           </div>
-
-//           {/* Error Message */}
-//           {error && (
-//             <p className="text-red-600 text-sm text-center">{error}</p>
-//           )}
-
-//           {/* Login Button */}
-//           <button
-//             type="submit"
-//             className="w-full bg-blue-500 text-white py-3 rounded-xl 
-//                      font-semibold shadow-lg hover:bg-blue-600 
-//                      transition duration-200"
-//           >
-//             Login
-//           </button>
-//         </form>
-
-//         {/* Links */}
-//         <div className="mt-6 text-center text-sm text-gray-700 space-y-2">
-//           <p>
-//             <a href="/forgot-password" className="hover:text-gray-900 underline">
-//               Forgot your password?
-//             </a>
-//           </p>
-
-//           <p>
-//             Don’t have an account?{" "}
-//             <a href="/register" className="underline hover:text-gray-900">
-//               Create one
-//             </a>
-//           </p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-// }
-
 import { useState, useContext } from "react";
 import { login } from "../services/authService";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  Link,
+} from "react-router-dom";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [email, setEmail] =
+    useState("");
+  const [password, setPassword] =
+    useState("");
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+  const [error, setError] =
+    useState("");
+  const [loading, setLoading] =
+    useState(false);
 
-  const { loginUser } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { loginUser } =
+    useContext(AuthContext);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const navigate =
+    useNavigate();
 
-    try {
-      const data = await login({ email, password });
-      loginUser(data);
+  const location =
+    useLocation();
 
-      if (data.role === "owner") {
-        navigate("/owner/dashboard");
-      } else {
-        navigate("/");
+  const handleSubmit =
+    async (e) => {
+      e.preventDefault();
+      setError("");
+      setLoading(true);
+
+      try {
+        const data =
+          await login({
+            email,
+            password,
+          });
+
+        loginUser(data);
+
+        const from =
+          location.state?.from
+            ?.pathname;
+
+        if (
+          data.role ===
+          "owner"
+        ) {
+          navigate(
+            "/owner/dashboard",
+            {
+              replace: true,
+            }
+          );
+        } else if (
+          data.role ===
+          "user"
+        ) {
+          navigate(
+            from ||
+              "/user/dashboard",
+            {
+              replace: true,
+            }
+          );
+        } else {
+          navigate("/",
+            {
+              replace: true,
+            }
+          );
+        }
+      } catch {
+        setError(
+          "Invalid email or password"
+        );
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setError("Invalid email or password");
-    }
-  };
+    };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-white px-3">
-      <div className="card shadow-sm w-100" style={{ maxWidth: 420 }}>
-        <div className="card-body p-4">
-          <h4 className="text-center fw-semibold mb-2">
-            Welcome Back
-          </h4>
-          <p className="text-center text-muted mb-4">
-            Log in to your StayNest account
+    <div
+      className="min-vh-100 d-flex"
+      style={{
+        background:
+          "linear-gradient(135deg,#f8fafc 0%,#eefbf5 42%,#ffffff 100%)",
+      }}
+    >
+      {/* LEFT PANEL */}
+      <div
+        className="d-none d-lg-flex flex-column justify-content-between p-5"
+        style={{
+          width: "48%",
+          background:
+            "linear-gradient(180deg,#0f172a 0%,#111827 48%,#052e2b 100%)",
+          position:
+            "relative",
+          overflow:
+            "hidden",
+        }}
+      >
+        <div style={glowTop} />
+        <div
+          style={
+            glowBottom
+          }
+        />
+
+        {/* LOGO */}
+        <div className="d-flex align-items-center gap-3 position-relative">
+          <div
+            style={
+              logoBox
+            }
+          >
+            <i className="bi bi-house-door-fill"></i>
+          </div>
+
+          <div
+            style={{
+              color:
+                "#fff",
+              fontWeight: 800,
+              fontSize:
+                "1.25rem",
+            }}
+          >
+            Stay
+            <span
+              style={{
+                color:
+                  "#10b981",
+              }}
+            >
+              Nest
+            </span>
+          </div>
+        </div>
+
+        {/* HERO */}
+        <div className="position-relative">
+          <div
+            style={{
+              display:
+                "inline-flex",
+              gap: 8,
+              alignItems:
+                "center",
+              padding:
+                "8px 12px",
+              borderRadius:
+                999,
+              background:
+                "rgba(255,255,255,.06)",
+              color:
+                "#cbd5e1",
+              fontSize:
+                ".8rem",
+              marginBottom:
+                20,
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius:
+                  "50%",
+                background:
+                  "#10b981",
+              }}
+            ></span>
+            Trusted by modern renters
+          </div>
+
+          <h1
+            style={{
+              color:
+                "#fff",
+              fontWeight: 800,
+              fontSize:
+                "2.35rem",
+              lineHeight:
+                1.18,
+              marginBottom:
+                18,
+              maxWidth:
+                520,
+            }}
+          >
+            Welcome back to
+            smarter stays.
+          </h1>
+
+          <p
+            style={{
+              color:
+                "#94a3b8",
+              lineHeight:
+                1.8,
+              maxWidth:
+                520,
+              marginBottom:
+                30,
+            }}
+          >
+            Access your
+            dashboard,
+            bookings,
+            messages and
+            premium stay
+            listings in one
+            clean platform.
           </p>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                className="form-control"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+          {[
+            [
+              "bi-shield-check",
+              "Secure sign in experience",
+            ],
+            [
+              "bi-house-heart",
+              "Verified properties",
+            ],
+            [
+              "bi-lightning-charge",
+              "Fast booking flow",
+            ],
+            [
+              "bi-person-badge",
+              "Trusted owners",
+            ],
+          ].map(
+            ([icon, text]) => (
+              <div
+                key={text}
+                className="d-flex align-items-center gap-3 mb-3"
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius:
+                      10,
+                    background:
+                      "rgba(16,185,129,.12)",
+                    display:
+                      "grid",
+                    placeItems:
+                      "center",
+                    color:
+                      "#10b981",
+                  }}
+                >
+                  <i
+                    className={`bi ${icon}`}
+                  ></i>
+                </div>
+
+                <span
+                  style={{
+                    color:
+                      "#e2e8f0",
+                    fontSize:
+                      ".94rem",
+                  }}
+                >
+                  {text}
+                </span>
+              </div>
+            )
+          )}
+        </div>
+
+        <div
+          style={{
+            color:
+              "#64748b",
+            fontSize:
+              ".82rem",
+          }}
+        >
+          ©{" "}
+          {new Date().getFullYear()}{" "}
+          StayNest
+        </div>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div className="flex-grow-1 d-flex align-items-center justify-content-center p-4 p-lg-5">
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 440,
+            background:
+              "rgba(255,255,255,.94)",
+            backdropFilter:
+              "blur(16px)",
+            border:
+              "1px solid rgba(255,255,255,.85)",
+            borderRadius:
+              24,
+            padding: 34,
+            boxShadow:
+              "0 24px 60px rgba(15,23,42,.08)",
+          }}
+        >
+          {/* MOBILE LOGO */}
+          <div className="d-flex d-lg-none align-items-center gap-2 mb-4">
+            <div
+              style={{
+                ...logoBox,
+                width: 36,
+                height: 36,
+                borderRadius:
+                  10,
+                fontSize: 16,
+              }}
+            >
+              <i className="bi bi-house-door-fill"></i>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label">Password</label>
-              <div className="input-group">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className="form-control"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <button
-  type="button"
-  className="btn btn-outline-secondary"
-  onClick={() => setShowPassword(!showPassword)}
->
-  <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-</button>
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize:
+                  "1.1rem",
+              }}
+            >
+              Stay
+              <span
+                style={{
+                  color:
+                    "#10b981",
+                }}
+              >
+                Nest
+              </span>
+            </span>
+          </div>
 
+          <h2
+            style={{
+              fontWeight: 800,
+              fontSize:
+                "1.9rem",
+              color:
+                "#0f172a",
+              marginBottom: 8,
+            }}
+          >
+            Welcome back
+          </h2>
+
+          <p
+            style={{
+              color:
+                "#64748b",
+              marginBottom:
+                24,
+            }}
+          >
+            Continue to your
+            dashboard,
+            bookings and
+            stays.
+          </p>
+
+          <form
+            onSubmit={
+              handleSubmit
+            }
+          >
+            {/* EMAIL */}
+            <div className="mb-3">
+              <label
+                style={
+                  labelStyle
+                }
+              >
+                Email
+              </label>
+
+              <div
+                style={
+                  inputWrap
+                }
+              >
+                <i className="bi bi-envelope text-muted"></i>
+
+                <input
+                  type="email"
+                  className="form-control border-0"
+                  style={
+                    cleanInput
+                  }
+                  placeholder="you@example.com"
+                  value={
+                    email
+                  }
+                  onChange={(
+                    e
+                  ) =>
+                    setEmail(
+                      e
+                        .target
+                        .value
+                    )
+                  }
+                  required
+                  disabled={
+                    loading
+                  }
+                />
               </div>
             </div>
 
+            {/* PASSWORD */}
+            <div className="mb-2">
+              <div className="d-flex justify-content-between mb-2">
+                <label
+                  style={
+                    labelStyle
+                  }
+                >
+                  Password
+                </label>
+
+                <Link
+                  to="/forgot-password"
+                  style={
+                    linkStyle
+                  }
+                >
+                  Forgot?
+                </Link>
+              </div>
+
+              <div
+                style={
+                  inputWrap
+                }
+              >
+                <i className="bi bi-lock text-muted"></i>
+
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  className="form-control border-0"
+                  style={
+                    cleanInput
+                  }
+                  placeholder="Enter password"
+                  value={
+                    password
+                  }
+                  onChange={(
+                    e
+                  ) =>
+                    setPassword(
+                      e
+                        .target
+                        .value
+                    )
+                  }
+                  required
+                  disabled={
+                    loading
+                  }
+                />
+
+                <button
+                  type="button"
+                  style={
+                    eyeBtn
+                  }
+                  onClick={() =>
+                    setShowPassword(
+                      !showPassword
+                    )
+                  }
+                >
+                  <i
+                    className={`bi ${
+                      showPassword
+                        ? "bi-eye-slash"
+                        : "bi-eye"
+                    }`}
+                  ></i>
+                </button>
+              </div>
+            </div>
+
+            {/* ERROR */}
             {error && (
-              <div className="alert alert-danger py-2 text-center">
+              <div
+                className="mt-3"
+                style={{
+                  background:
+                    "#fef2f2",
+                  color:
+                    "#dc2626",
+                  border:
+                    "1px solid #fecaca",
+                  borderRadius:
+                    14,
+                  padding:
+                    "12px 14px",
+                  fontSize:
+                    ".88rem",
+                }}
+              >
+                <i className="bi bi-exclamation-circle me-2"></i>
                 {error}
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary w-100">
-              Login
+            {/* SUBMIT */}
+            <button
+              type="submit"
+              disabled={
+                loading
+              }
+              className="btn w-100 mt-4"
+              style={{
+                height: 48,
+                border: "none",
+                borderRadius:
+                  14,
+                fontWeight: 700,
+                color: "#fff",
+                background:
+                  "linear-gradient(135deg,#10b981,#059669)",
+                boxShadow:
+                  "0 14px 34px rgba(16,185,129,.24)",
+              }}
+            >
+              {loading ? (
+                <span className="d-flex align-items-center justify-content-center gap-2">
+                  <span className="spinner-border spinner-border-sm"></span>
+                  Signing in...
+                </span>
+              ) : (
+                "Sign in"
+              )}
             </button>
-          </form>
 
-          <div className="text-center mt-4 small">
-            <p className="mb-1">
-              <a href="/forgot-password">Forgot your password?</a>
-            </p>
-            <p className="mb-0">
-              Don’t have an account?{" "}
-              <a href="/register">Create one</a>
-            </p>
-          </div>
+            <div
+              style={{
+                textAlign:
+                  "center",
+                marginTop: 18,
+                fontSize:
+                  ".92rem",
+                color:
+                  "#64748b",
+                lineHeight:
+                  1.6,
+              }}
+            >
+              Don’t have an
+              account?{" "}
+              <Link
+                to="/register"
+                style={
+                  linkStyle
+                }
+              >
+                Create one
+                free
+              </Link>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   );
 }
+
+/* helpers */
+
+const glowTop = {
+  position: "absolute",
+  top: -80,
+  right: -80,
+  width: 280,
+  height: 280,
+  borderRadius: "50%",
+  background:
+    "rgba(16,185,129,.12)",
+};
+
+const glowBottom = {
+  position: "absolute",
+  bottom: -100,
+  left: -100,
+  width: 320,
+  height: 320,
+  borderRadius: "50%",
+  background:
+    "rgba(16,185,129,.08)",
+};
+
+const logoBox = {
+  width: 42,
+  height: 42,
+  borderRadius: 12,
+  background:
+    "linear-gradient(135deg,#10b981,#059669)",
+  display: "grid",
+  placeItems: "center",
+  color: "#fff",
+  fontSize: 20,
+  boxShadow:
+    "0 14px 28px rgba(16,185,129,.28)",
+};
+
+const labelStyle = {
+  fontSize: ".88rem",
+  fontWeight: 600,
+  color: "#374151",
+  marginBottom: 8,
+  display: "block",
+};
+
+const inputWrap = {
+  height: 48,
+  border:
+    "1px solid #dbe3ea",
+  borderRadius: 14,
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding:
+    "0 14px",
+  background: "#fff",
+};
+
+const cleanInput = {
+  height: "100%",
+  boxShadow: "none",
+  padding: 0,
+  background:
+    "transparent",
+};
+
+const eyeBtn = {
+  border: "none",
+  background:
+    "transparent",
+  color: "#94a3b8",
+};
+
+const linkStyle = {
+  color: "#10b981",
+  textDecoration: "none",
+  fontWeight: 700,
+};

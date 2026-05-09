@@ -48,6 +48,7 @@ class Property(models.Model):
     is_ac = models.BooleanField(default=False)
     parking_available = models.BooleanField(default=False)
     food_provided = models.BooleanField(default=False)
+    food_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     # Optional fields
     security_deposit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -73,8 +74,11 @@ class SharingOption(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="sharing_options")
     sharing_type = models.PositiveSmallIntegerField()  # 1,2,3,4
     total_beds = models.PositiveIntegerField()
+    # NEW (owner enters initially; system updates later)
+    occupied_beds = models.PositiveIntegerField(default=0)
     available_beds = models.PositiveIntegerField()
     rent_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    advance_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         unique_together = ("property", "sharing_type")

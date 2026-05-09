@@ -123,6 +123,10 @@ class OwnerProfileReadSerializer(serializers.ModelSerializer):
     is_email_verified = serializers.BooleanField(source="user.is_active", read_only=True)
     is_owner_approved = serializers.BooleanField(source="is_verified", read_only=True)
 
+    bank_account_number = serializers.CharField(read_only=True)
+    bank_ifsc_code = serializers.CharField(read_only=True)
+    bank_beneficiary_name = serializers.CharField(read_only=True)
+
     class Meta:
         model = Owner
         fields = [
@@ -135,6 +139,13 @@ class OwnerProfileReadSerializer(serializers.ModelSerializer):
             "is_email_verified",
             "is_owner_approved",
             "created_at",
+            "proof",
+            "city",
+            "state",
+            "postal_code",
+            "bank_account_number",   
+            "bank_ifsc_code",        
+            "bank_beneficiary_name",
         ]
 
 
@@ -147,11 +158,17 @@ class OwnerProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Owner
         fields = [
-            "full_name",
-            "phone",
-            "address",
-            "profile_photo",
-        ]
+    "full_name",
+    "phone",
+    "address",
+    "profile_photo",
+    "city",
+    "state",
+    "postal_code",
+    "bank_account_number",
+    "bank_ifsc_code",        
+    "bank_beneficiary_name",
+]
 
     def validate(self, attrs):
         # Reject attempts to update restricted fields
@@ -159,6 +176,94 @@ class OwnerProfileUpdateSerializer(serializers.ModelSerializer):
         if forbidden_fields:
             raise serializers.ValidationError(
                 f"Updating {', '.join(forbidden_fields)} is not allowed."
+            )
+        return attrs
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
+
+        if "first_name" in user_data:
+            instance.user.first_name = user_data["first_name"]
+            instance.user.save(update_fields=["first_name"])
+
+        return super().update(instance, validated_data)
+    
+
+class OwnerPublicProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+    full_name = serializers.CharField(source="user.first_name", read_only=True)
+    role = serializers.CharField(source="user.profile.role", read_only=True)
+    is_owner_approved = serializers.BooleanField(source="is_verified", read_only=True)
+
+    proof = serializers.SerializerMethodField()
+
+    def get_proof(self, obj):
+        request = self.context.get("request")
+        if obj.proof:
+            return request.build_absolute_uri(obj.proof.url)
+        return None
+
+    class Meta:
+        model = Owner
+        fields = [
+            "email",
+            "full_name",
+            "role",
+            "phone",
+            "address",
+            "profile_photo",
+            "city",
+            "state",
+            "postal_code",
+            "proof", 
+            "is_owner_approved",  
+        ]
+
+
+class UserProfileReadSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+    full_name = serializers.CharField(source="user.first_name", read_only=True)
+    role = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = [
+            "email",
+            "full_name",
+            "phone",
+            "address",
+            "profile_photo",
+            "proof",
+            "role",
+        ]
+
+        
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(
+        source="user.first_name",
+        required=False
+    )
+
+    class Meta:
+        model = Profile
+        fields = [
+            "full_name",
+            "phone",
+            "address",
+            "profile_photo",
+        ]
+
+    def validate(self, attrs):
+        # block any unexpected fields
+        forbidden = set(self.initial_data.keys()) - {
+            "full_name",
+            "phone",
+            "address",
+            "profile_photo",
+        }
+        if forbidden:
+            raise serializers.ValidationError(
+                f"Updating {', '.join(forbidden)} is not allowed."
             )
         return attrs
 

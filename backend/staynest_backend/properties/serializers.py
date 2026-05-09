@@ -11,7 +11,19 @@ class SharingOptionSerializer(serializers.ModelSerializer):
         model = SharingOption
         # property is injected internally, not from client
         # available_beds is system-managed
-        exclude = ("property", "available_beds")
+        exclude = ("property",)
+        read_only_fields = ("available_beds",)
+
+    def validate(self, data):
+        rent = data.get("rent_amount")
+        advance = data.get("advance_amount", 0)
+
+        if advance > rent:
+            raise serializers.ValidationError(
+                "Advance cannot be greater than rent amount."
+            )
+
+        return data    
 
 # Property Image Upload Serializer
 
@@ -35,7 +47,7 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 # =========================
 
 class PropertySerializer(serializers.ModelSerializer):
-    sharing_options = SharingOptionSerializer(many=True)
+    sharing_options = SharingOptionSerializer(many=True, required=False)
     images = PropertyImageSerializer(many=True, required=False)
 
     class Meta:
@@ -57,11 +69,24 @@ class PropertySerializer(serializers.ModelSerializer):
 
         # Create sharing options
         for s in sharing_data:
+            total = s["total_beds"]
+            occupied = s.get("occupied_beds", 0)
+
+            if occupied > total:
+                raise serializers.ValidationError(
+                    "Occupied beds cannot exceed total beds."
+                )
+
             SharingOption.objects.create(
                 property=prop,
-                available_beds=s["total_beds"],
-                **s
+                sharing_type=s["sharing_type"],
+                total_beds=total,
+                occupied_beds=occupied,
+                available_beds=total - occupied,
+                rent_amount=s["rent_amount"],
+                advance_amount=s.get("advance_amount", 0),
             )
+
 
         # Create images if present
         for img in images_data:
@@ -88,21 +113,44 @@ class PropertySerializer(serializers.ModelSerializer):
             }
 
             for s in sharing_data:
+                total = s["total_beds"]
+                occupied = s.get("occupied_beds", 0)
+
+                if occupied > total:
+                    raise serializers.ValidationError(
+                        "Occupied beds cannot exceed total beds."
+                    )
+
                 opt = existing.get(s["sharing_type"])
                 if opt:
-                    opt.total_beds = s["total_beds"]
+                    opt.total_beds = total
+                    opt.occupied_beds = occupied
+                    opt.available_beds = total - occupied
                     opt.rent_amount = s["rent_amount"]
-                    opt.available_beds = s["total_beds"]
+                    opt.advance_amount = s.get("advance_amount", 0)
                     opt.save()
                 else:
                     SharingOption.objects.create(
                         property=instance,
-                        available_beds=s["total_beds"],
-                        **s
+                        sharing_type=s["sharing_type"],
+                        total_beds=total,
+                        occupied_beds=occupied,
+                        available_beds=total - occupied,
+                        rent_amount=s["rent_amount"],
+                        advance_amount=s.get("advance_amount", 0),
                     )
-
-
         return instance
+    
+    def validate(self, data):
+        food_provided = data.get("food_provided")
+        food_price = data.get("food_price")
+
+        if food_provided and not food_price:
+            raise serializers.ValidationError(
+                "Food price is required when food is provided."
+            )
+
+        return data
 
 
 # =========================
@@ -110,6 +158,13 @@ class PropertySerializer(serializers.ModelSerializer):
 # =========================
 
 class PropertyLocationSerializer(serializers.ModelSerializer):
+    latitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, required=False, allow_null=True
+    )
+    longitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, required=False, allow_null=True
+    )
+
     class Meta:
         model = Property
         fields = [
@@ -121,7 +176,6 @@ class PropertyLocationSerializer(serializers.ModelSerializer):
             "latitude",
             "longitude",
         ]
-        read_only_fields = ("latitude", "longitude")
 
     def validate_city(self, value):
         if not value:

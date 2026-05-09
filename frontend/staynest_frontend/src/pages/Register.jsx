@@ -1,365 +1,45 @@
-// // Register.jsx — SaaS-Style Unified Registration (Logic Unchanged)
-
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { register } from "../services/authService";
-
-// export default function Register() {
-//   const navigate = useNavigate();
-
-//   const [role, setRole] = useState("user");
-
-//   const [fullName, setFullName] = useState("");
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [confirmPassword, setConfirmPassword] = useState("");
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-//   const [phone, setPhone] = useState("");
-//   const [address, setAddress] = useState("");
-//   const [idProof, setIdProof] = useState(null);
-
-//   const [error, setError] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [message, setMessage] = useState("");
-
-
-//   const validateForm = () => {
-//     if (!fullName.trim() || !email.trim()) return "Full name & email required";
-//     if (!password.trim()) return "Password required";
-//     if (password !== confirmPassword) return "Passwords do not match";
-//     if (!idProof) return "ID Proof is required";
-
-//     if (role === "owner") {
-//       if (!phone.trim() || !address.trim()) return "Phone & address required";
-//     }
-
-//     return null;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     setError("");
-//     setMessage("");
-
-//     const errMsg = validateForm();
-//     if (errMsg) return setError(errMsg);
-
-//     setLoading(true);
-
-//     try {
-//       const fd = new FormData();
-//       fd.append("full_name", fullName);
-//       fd.append("email", email);
-//       fd.append("password", password);
-//       fd.append("role", role);
-//       fd.append("proof", idProof);
-
-//       if (role === "owner") {
-//         fd.append("phone", phone);
-//         fd.append("address", address);
-//       }
-
-//       await register(fd);
-
-//       setMessage("Verification email sent. Check your inbox.");
-
-//       navigate("/email-sent", {
-//         state: { email, type: "verify" }
-//       });
-
-//     } catch (err) {
-//       console.log("REGISTER ERROR:", err);
-
-//       if (!err.response) {
-//         return setError("Cannot reach server.");
-//       }
-
-//       const data = err.response.data;
-
-//       setError(
-//         data.error ||
-//         data.message ||
-//         JSON.stringify(data) ||
-//         "Something went wrong."
-//       );
-
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-
-//   return (
-//     <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 px-4 py-12">
-//       <div className="pt-24 w-full max-w-6xl mx-auto">
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-
-//           {/* LEFT PANEL — Marketing / Welcome */}
-//           <div className="px-6 hidden lg:block">
-//             <div className="max-w-lg">
-//               <h1 className="text-4xl font-bold text-gray-800 mb-4">
-//                 Create your StayNest account
-//               </h1>
-//               <p className="text-gray-600 mb-6">
-//                 Register to explore properties, connect with owners, and
-//                 manage bookings seamlessly. If you're a property owner,
-//                 list and manage your stays with confidence.
-//               </p>
-
-//               <ul className="text-sm text-gray-700 space-y-2">
-//                 <li>• Secure email verification</li>
-//                 <li>• Easy onboarding for property owners</li>
-//                 <li>• Protected file uploads for ID verification</li>
-//               </ul>
-//             </div>
-//           </div>
-
-//           {/* RIGHT PANEL — FORM CARD */}
-//           <div className="mx-auto w-full max-w-md">
-//             <div className="backdrop-blur-xl bg-white/60 border border-white/70 shadow-xl rounded-2xl p-8">
-
-//               <h2 className="text-xl font-semibold text-gray-800 mb-2">
-//                 Sign Up
-//               </h2>
-//               <p className="text-sm text-gray-600 mb-4">
-//                 Create an account to get started.
-//               </p>
-
-//               <form onSubmit={handleSubmit} className="space-y-4">
-
-//                 {/* ROLE SELECTOR */}
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Account Type
-//                   </label>
-//                   <select
-//                     value={role}
-//                     onChange={(e) => setRole(e.target.value)}
-//                     className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                   >
-//                     <option value="user">User</option>
-//                     <option value="owner">Owner</option>
-//                   </select>
-
-//                   {role === "owner" && (
-//                     <p className="text-xs text-gray-500 mt-1">
-//                       Owners must provide verification details.
-//                     </p>
-//                   )}
-//                 </div>
-
-//                 {/* FULL NAME */}
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Full Name
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={fullName}
-//                     onChange={(e) => setFullName(e.target.value)}
-//                     className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                     placeholder="Your full name"
-//                   />
-//                 </div>
-
-//                 {/* EMAIL */}
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Email Address
-//                   </label>
-//                   <input
-//                     type="email"
-//                     value={email}
-//                     onChange={(e) => setEmail(e.target.value)}
-//                     className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                     placeholder="you@example.com"
-//                   />
-//                 </div>
-
-//                 {/* PASSWORD */}
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Password
-//                   </label>
-
-//                   <div className="flex items-center bg-white/80 border border-gray-300 rounded-lg">
-//                     <input
-//                       type={showPassword ? "text" : "password"}
-//                       value={password}
-//                       onChange={(e) => setPassword(e.target.value)}
-//                       className="w-full p-3 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
-//                       placeholder="Choose a secure password"
-//                     />
-//                     <button
-//                       type="button"
-//                       onClick={() => setShowPassword(!showPassword)}
-//                       className="px-3 text-gray-600 hover:text-gray-800 transition"
-//                     >
-//                       {showPassword ? (
-//                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.45 10.45 0 0 0 1.5 12c2.1 4.5 6.3 7.5 10.5 7.5 1.95 0 3.9-.6 5.7-1.65M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M6.23 6.23 3 3m18 18-3.23-3.23M15 12a3 3 0 0 0-3-3" />
-//                         </svg>
-//                       ) : (
-//                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322C3.532 7.51 7.86 4.5 12 4.5c4.14 0 8.468 3.01 9.964 7.822a1.38 1.38 0 0 1 0 .856C20.468 16.49 16.14 19.5 12 19.5c-4.14 0-8.468-3.01-9.964-7.822a1.38 1.38 0 0 1 0-.856z" />
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-//                         </svg>
-//                       )}
-//                     </button>
-//                   </div>
-//                 </div>
-
-//                 {/* CONFIRM PASSWORD */}
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Confirm Password
-//                   </label>
-
-//                   <div className="flex items-center bg-white/80 border border-gray-300 rounded-lg">
-//                     <input
-//                       type={showConfirmPassword ? "text" : "password"}
-//                       value={confirmPassword}
-//                       onChange={(e) => setConfirmPassword(e.target.value)}
-//                       className="w-full p-3 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
-//                       placeholder="Re-enter password"
-//                     />
-//                     <button
-//                       type="button"
-//                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-//                       className="px-3 text-gray-600 hover:text-gray-800 transition"
-//                     >
-//                       {showConfirmPassword ? (
-//                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.45 10.45 0 0 0 1.5 12c2.1 4.5 6.3 7.5 10.5 7.5 1.95 0 3.9-.6 5.7-1.65M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M6.23 6.23 3 3m18 18-3.23-3.23M15 12a3 3 0 0 0-3-3" />
-//                         </svg>
-//                       ) : (
-//                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322C3.532 7.51 7.86 4.5 12 4.5c4.14 0 8.468 3.01 9.964 7.822a1.38 1.38 0 0 1 0 .856C20.468 16.49 16.14 19.5 12 19.5c-4.14 0-8.468-3.01-9.964-7.822a1.38 1.38 0 0 1 0-.856z" />
-//                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-//                         </svg>
-//                       )}
-//                     </button>
-//                   </div>
-//                 </div>
-
-//                 {/* OWNER FIELDS */}
-//                 {role === "owner" && (
-//                   <>
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">
-//                         Phone
-//                       </label>
-//                       <input
-//                         type="text"
-//                         value={phone}
-//                         onChange={(e) => setPhone(e.target.value)}
-//                         className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                         placeholder="+91 98765 43210"
-//                       />
-//                     </div>
-
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">
-//                         Address
-//                       </label>
-//                       <textarea
-//                         value={address}
-//                         onChange={(e) => setAddress(e.target.value)}
-//                         className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                         placeholder="Owner address"
-//                       />
-//                     </div>
-//                   </>
-//                 )}
-
-//                 {/* PROOF UPLOAD */}
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Government ID Proof
-//                   </label>
-//                   <input
-//                     type="file"
-//                     onChange={(e) => setIdProof(e.target.files[0])}
-//                     className="w-full text-sm"
-//                   />
-//                   <p className="text-xs text-gray-500 mt-1">
-//                     Accepted formats: PDF, JPG, PNG.
-//                   </p>
-//                 </div>
-
-//                 {error && (
-//                   <p className="text-red-600 text-sm bg-red-50 border border-red-200 p-2 rounded">
-//                     {error}
-//                   </p>
-//                 )}
-
-//                 <button
-//                   type="submit"
-//                   disabled={loading}
-//                   className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold shadow hover:bg-blue-600 transition disabled:opacity-50"
-//                 >
-//                   {loading ? "Creating Account..." : "Create Account"}
-//                 </button>
-
-//                 <p className="text-center text-sm text-gray-700">
-//                   Already have an account?{" "}
-//                   <span
-//                     onClick={() => navigate("/login")}
-//                     className="text-blue-600 cursor-pointer hover:underline"
-//                   >
-//                     Login
-//                   </span>
-//                 </p>
-//               </form>
-
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-// }
-
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { register } from "../services/authService";
 
 export default function Register() {
   const navigate = useNavigate();
 
   const [role, setRole] = useState("user");
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
+  const [showPassword, setShowPassword] =
+    useState(false);
+  const [
+    showConfirmPassword,
+    setShowConfirmPassword,
+  ] = useState(false);
   const [idProof, setIdProof] = useState(null);
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const validateForm = () => {
-    if (!fullName.trim() || !email.trim())
-      return "Full name & email required";
-    if (!password.trim()) return "Password required";
+  const validate = () => {
+    if (!fullName.trim())
+      return "Full name required";
+    if (!email.trim()) return "Email required";
+    if (!password)
+      return "Password required";
     if (password !== confirmPassword)
       return "Passwords do not match";
-    if (!idProof) return "ID Proof is required";
+    if (!idProof)
+      return "ID proof required";
 
-    if (role === "owner") {
-      if (!phone.trim() || !address.trim())
-        return "Phone & address required";
+    if (
+      role === "owner" &&
+      (!phone.trim() ||
+        !address.trim())
+    ) {
+      return "Phone & address required for owners";
     }
 
     return null;
@@ -367,15 +47,16 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setError("");
-    const errMsg = validateForm();
-    if (errMsg) return setError(errMsg);
+
+    const err = validate();
+    if (err) return setError(err);
 
     setLoading(true);
 
     try {
       const fd = new FormData();
+
       fd.append("full_name", fullName);
       fd.append("email", email);
       fd.append("password", password);
@@ -393,211 +74,845 @@ export default function Register() {
         state: { email, type: "verify" },
       });
     } catch (err) {
-      if (!err.response) {
-        setError("Cannot reach server.");
-      } else {
-        const data = err.response.data;
-        setError(
-          data.error ||
-            data.message ||
-            JSON.stringify(data) ||
-            "Something went wrong."
-        );
-      }
+      setError(
+        err?.response?.data?.error ||
+          err?.response?.data
+            ?.message ||
+          "Unable to register"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-  <div className="min-vh-100 bg-white d-flex justify-content-center pt-5">
-    <div className="container pt-5">
-      <div className="row align-items-center justify-content-center">
+    <div
+      className="min-vh-100 d-flex"
+      style={{
+        background:
+          "linear-gradient(135deg,#f8fafc 0%,#eefbf5 42%,#ffffff 100%)",
+      }}
+    >
+      {/* LEFT PANEL */}
+      <div
+        className="d-none d-lg-flex flex-column justify-content-between p-5"
+        style={{
+          width: "48%",
+          background:
+            "linear-gradient(180deg,#0f172a 0%,#111827 48%,#052e2b 100%)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* glow */}
+        <div
+          style={glowTop}
+        />
+        <div
+          style={glowBottom}
+        />
 
-        {/* LEFT PANEL — Marketing */}
-        <div className="col-lg-6 d-none d-lg-block">
-          <div className="pe-5">
-            <h1 className="fw-bold mb-3">
-              Create your StayNest account
-            </h1>
+        {/* logo */}
+        <div className="d-flex align-items-center gap-3 position-relative">
+          <div style={logoBox}>
+            <i className="bi bi-house-door-fill"></i>
+          </div>
 
-            <p className="text-muted mb-4">
-              Register to explore properties, connect with owners,
-              and manage bookings seamlessly. If you're a property
-              owner, list and manage your stays with confidence.
-            </p>
-
-            <ul className="text-muted small ps-3">
-              <li className="mb-2">
-                Secure email verification
-              </li>
-              <li className="mb-2">
-                Easy onboarding for property owners
-              </li>
-              <li className="mb-2">
-                Protected file uploads for ID verification
-              </li>
-            </ul>
+          <div
+            style={{
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: "1.25rem",
+            }}
+          >
+            Stay
+            <span
+              style={{
+                color: "#10b981",
+              }}
+            >
+              Nest
+            </span>
           </div>
         </div>
 
-        {/* RIGHT PANEL — Form */}
-        <div className="col-12 col-md-10 col-lg-6 col-xl-5">
-          <div className="card shadow-sm">
-            <div className="card-body p-4">
+        {/* hero */}
+        <div className="position-relative">
+          <div
+            style={{
+              display:
+                "inline-flex",
+              gap: 8,
+              alignItems:
+                "center",
+              padding:
+                "8px 12px",
+              borderRadius:
+                999,
+              background:
+                "rgba(255,255,255,.06)",
+              color:
+                "#cbd5e1",
+              fontSize:
+                ".8rem",
+              marginBottom:
+                20,
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius:
+                  "50%",
+                background:
+                  "#10b981",
+              }}
+            ></span>
+            Trusted onboarding
+          </div>
 
-              <h4 className="fw-semibold mb-1">
-                Create Account
-              </h4>
-              <p className="text-muted mb-4">
-                Register to get started with StayNest
-              </p>
+          <h1
+            style={{
+              color: "#fff",
+              fontWeight: 800,
+              fontSize:
+                "2.35rem",
+              lineHeight:
+                1.18,
+              marginBottom:
+                18,
+              maxWidth:
+                520,
+            }}
+          >
+            Join StayNest and
+            unlock modern renting.
+          </h1>
 
-              <form onSubmit={handleSubmit}>
+          <p
+            style={{
+              color:
+                "#94a3b8",
+              lineHeight:
+                1.8,
+              maxWidth:
+                520,
+              marginBottom:
+                30,
+            }}
+          >
+            Find better stays,
+            manage properties,
+            receive bookings and
+            enjoy a clean modern
+            platform.
+          </p>
 
-                {/* Account Type */}
-                <div className="mb-3">
-                  <label className="form-label">Account Type</label>
-                  <select
-                    className="form-select"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                  >
-                    <option value="user">User</option>
-                    <option value="owner">Owner</option>
-                  </select>
+          {[
+            [
+              "bi-person-check",
+              "Verified accounts",
+            ],
+            [
+              "bi-house-heart",
+              "Premium stay listings",
+            ],
+            [
+              "bi-shield-lock",
+              "Secure document flow",
+            ],
+            [
+              "bi-phone",
+              "Mobile-first dashboard",
+            ],
+          ].map(
+            ([icon, text]) => (
+              <div
+                key={text}
+                className="d-flex align-items-center gap-3 mb-3"
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius:
+                      10,
+                    background:
+                      "rgba(16,185,129,.12)",
+                    display:
+                      "grid",
+                    placeItems:
+                      "center",
+                    color:
+                      "#10b981",
+                  }}
+                >
+                  <i
+                    className={`bi ${icon}`}
+                  ></i>
                 </div>
 
-                {/* Full Name */}
-                <div className="mb-3">
-                  <label className="form-label">Full Name</label>
+                <span
+                  style={{
+                    color:
+                      "#e2e8f0",
+                    fontSize:
+                      ".94rem",
+                  }}
+                >
+                  {text}
+                </span>
+              </div>
+            )
+          )}
+        </div>
+
+        <div
+          style={{
+            color:
+              "#64748b",
+            fontSize:
+              ".82rem",
+          }}
+        >
+          ©{" "}
+          {new Date().getFullYear()}{" "}
+          StayNest
+        </div>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div className="flex-grow-1 d-flex align-items-center justify-content-center p-4 p-lg-5">
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 540,
+            background:
+              "rgba(255,255,255,.94)",
+            backdropFilter:
+              "blur(16px)",
+            border:
+              "1px solid rgba(255,255,255,.85)",
+            borderRadius: 24,
+            padding: 34,
+            boxShadow:
+              "0 24px 60px rgba(15,23,42,.08)",
+          }}
+        >
+          {/* mobile logo */}
+          <div className="d-flex d-lg-none align-items-center gap-2 mb-4">
+            <div
+              style={{
+                ...logoBox,
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                fontSize: 16,
+              }}
+            >
+              <i className="bi bi-house-door-fill"></i>
+            </div>
+
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize:
+                  "1.1rem",
+              }}
+            >
+              Stay
+              <span
+                style={{
+                  color:
+                    "#10b981",
+                }}
+              >
+                Nest
+              </span>
+            </span>
+          </div>
+
+          <h2
+            style={{
+              fontWeight: 800,
+              fontSize:
+                "1.9rem",
+              color:
+                "#0f172a",
+              marginBottom: 8,
+            }}
+          >
+            Create account
+          </h2>
+
+          <p
+            style={{
+              color:
+                "#64748b",
+              marginBottom:
+                24,
+            }}
+          >
+            Already have an
+            account?{" "}
+            <Link
+              to="/login"
+              style={linkStyle}
+            >
+              Sign in
+            </Link>
+          </p>
+
+          {/* ROLE SWITCH */}
+          <div
+            className="d-flex p-1 mb-4"
+            style={{
+              background:
+                "#eef2f7",
+              borderRadius: 14,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() =>
+                setRole("user")
+              }
+              style={roleBtn(
+                role === "user"
+              )}
+              className="border-0 flex-grow-1"
+            >
+              🏠 Looking for stay
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setRole("owner")
+              }
+              style={roleBtn(
+                role === "owner"
+              )}
+              className="border-0 flex-grow-1"
+            >
+              🏢 Property owner
+            </button>
+          </div>
+
+          <form
+            onSubmit={
+              handleSubmit
+            }
+          >
+            <div className="row g-3">
+              <div className="col-12">
+                <label
+                  style={
+                    labelStyle
+                  }
+                >
+                  Full Name
+                </label>
+
+                <div
+                  style={
+                    inputWrap
+                  }
+                >
+                  <i className="bi bi-person text-muted"></i>
+
                   <input
-                    type="text"
-                    className="form-control"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    className="form-control border-0"
+                    style={
+                      cleanInput
+                    }
+                    value={
+                      fullName
+                    }
+                    onChange={(
+                      e
+                    ) =>
+                      setFullName(
+                        e.target
+                          .value
+                      )
+                    }
+                    placeholder="John Doe"
                   />
                 </div>
+              </div>
 
-                {/* Email */}
-                <div className="mb-3">
-                  <label className="form-label">Email</label>
+              <div className="col-12">
+                <label
+                  style={
+                    labelStyle
+                  }
+                >
+                  Email
+                </label>
+
+                <div
+                  style={
+                    inputWrap
+                  }
+                >
+                  <i className="bi bi-envelope text-muted"></i>
+
                   <input
                     type="email"
-                    className="form-control"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    className="form-control border-0"
+                    style={
+                      cleanInput
+                    }
+                    value={
+                      email
+                    }
+                    onChange={(
+                      e
+                    ) =>
+                      setEmail(
+                        e.target
+                          .value
+                      )
+                    }
+                    placeholder="you@example.com"
                   />
                 </div>
+              </div>
 
-                {/* Password */}
-                <div className="mb-3">
-                  <label className="form-label">Password</label>
-                  <div className="input-group">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      className="form-control"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setShowPassword(!showPassword)}
+              {role ===
+                "owner" && (
+                <>
+                  <div className="col-md-6">
+                    <label
+                      style={
+                        labelStyle
+                      }
                     >
-                      <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                    </button>
-                  </div>
-                </div>
+                      Phone
+                    </label>
 
-                {/* Confirm Password */}
-                <div className="mb-3">
-                  <label className="form-label">Confirm Password</label>
-                  <div className="input-group">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      className="form-control"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    <div
+                      style={
+                        inputWrap
+                      }
                     >
-                      <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                    </button>
-                  </div>
-                </div>
+                      <i className="bi bi-phone text-muted"></i>
 
-                {/* Owner-only fields */}
-                {role === "owner" && (
-                  <>
-                    <div className="mb-3">
-                      <label className="form-label">Phone</label>
                       <input
-                        type="text"
-                        className="form-control"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        className="form-control border-0"
+                        style={
+                          cleanInput
+                        }
+                        value={
+                          phone
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          setPhone(
+                            e
+                              .target
+                              .value
+                          )
+                        }
+                        placeholder="+91..."
                       />
                     </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">Address</label>
-                      <textarea
-                        className="form-control"
-                        rows="2"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* ID Proof */}
-                <div className="mb-3">
-                  <label className="form-label">Government ID Proof</label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    onChange={(e) => setIdProof(e.target.files[0])}
-                  />
-                </div>
-
-                {error && (
-                  <div className="alert alert-danger py-2">
-                    {error}
                   </div>
-                )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn btn-primary w-100"
+                  <div className="col-md-6">
+                    <label
+                      style={
+                        labelStyle
+                      }
+                    >
+                      Address
+                    </label>
+
+                    <div
+                      style={
+                        inputWrap
+                      }
+                    >
+                      <i className="bi bi-geo-alt text-muted"></i>
+
+                      <input
+                        className="form-control border-0"
+                        style={
+                          cleanInput
+                        }
+                        value={
+                          address
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          setAddress(
+                            e
+                              .target
+                              .value
+                          )
+                        }
+                        placeholder="City / Area"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="col-md-6">
+                <label
+                  style={
+                    labelStyle
+                  }
                 >
-                  {loading ? "Creating Account..." : "Create Account"}
-                </button>
+                  Password
+                </label>
 
-                <p className="text-center mt-3 small">
-                  Already have an account?{" "}
-                  <span
-                    role="button"
-                    className="text-primary text-decoration-underline"
-                    onClick={() => navigate("/login")}
+                <div
+                  style={
+                    inputWrap
+                  }
+                >
+                  <i className="bi bi-lock text-muted"></i>
+
+                  <input
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
+                    className="form-control border-0"
+                    style={
+                      cleanInput
+                    }
+                    value={
+                      password
+                    }
+                    onChange={(
+                      e
+                    ) =>
+                      setPassword(
+                        e.target
+                          .value
+                      )
+                    }
+                    placeholder="Password"
+                  />
+
+                  <button
+                    type="button"
+                    style={
+                      eyeBtn
+                    }
+                    onClick={() =>
+                      setShowPassword(
+                        !showPassword
+                      )
+                    }
                   >
-                    Login
+                    <i
+                      className={`bi ${
+                        showPassword
+                          ? "bi-eye-slash"
+                          : "bi-eye"
+                      }`}
+                    ></i>
+                  </button>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <label
+                  style={
+                    labelStyle
+                  }
+                >
+                  Confirm
+                </label>
+
+                <div
+                  style={
+                    inputWrap
+                  }
+                >
+                  <i className="bi bi-shield-check text-muted"></i>
+
+                  <input
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
+                    className="form-control border-0"
+                    style={
+                      cleanInput
+                    }
+                    value={
+                      confirmPassword
+                    }
+                    onChange={(
+                      e
+                    ) =>
+                      setConfirmPassword(
+                        e.target
+                          .value
+                      )
+                    }
+                    placeholder="Repeat"
+                  />
+
+                  <button
+                    type="button"
+                    style={
+                      eyeBtn
+                    }
+                    onClick={() =>
+                      setShowConfirmPassword(
+                        !showConfirmPassword
+                      )
+                    }
+                  >
+                    <i
+                      className={`bi ${
+                        showConfirmPassword
+                          ? "bi-eye-slash"
+                          : "bi-eye"
+                      }`}
+                    ></i>
+                  </button>
+                </div>
+              </div>
+
+              {/* Upload */}
+              <div className="col-12">
+                <label
+                  style={
+                    labelStyle
+                  }
+                >
+                  Government ID
+                  Proof
+                </label>
+
+                <label
+                  style={{
+                    height: 54,
+                    border:
+                      "2px dashed #dbe3ea",
+                    borderRadius:
+                      14,
+                    display:
+                      "flex",
+                    alignItems:
+                      "center",
+                    gap: 12,
+                    padding:
+                      "0 14px",
+                    cursor:
+                      "pointer",
+                    overflow:
+                      "hidden",
+                  }}
+                >
+                  <i className="bi bi-cloud-upload text-success"></i>
+
+                  <span
+                    style={{
+                      color:
+                        "#64748b",
+                      whiteSpace:
+                        "nowrap",
+                      overflow:
+                        "hidden",
+                      textOverflow:
+                        "ellipsis",
+                    }}
+                  >
+                    {idProof
+                      ? idProof.name
+                      : "Upload Aadhaar / PAN / Passport"}
                   </span>
-                </p>
 
-              </form>
-
+                  <input
+                    hidden
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(
+                      e
+                    ) =>
+                      setIdProof(
+                        e.target
+                          .files[0]
+                      )
+                    }
+                  />
+                </label>
+              </div>
             </div>
-          </div>
-        </div>
 
+            {error && (
+              <div
+                className="mt-3"
+                style={{
+                  background:
+                    "#fef2f2",
+                  color:
+                    "#dc2626",
+                  border:
+                    "1px solid #fecaca",
+                  borderRadius:
+                    14,
+                  padding:
+                    "12px 14px",
+                  fontSize:
+                    ".88rem",
+                }}
+              >
+                <i className="bi bi-exclamation-circle me-2"></i>
+                {error}
+              </div>
+            )}
+
+            <button
+              disabled={
+                loading
+              }
+              className="btn w-100 mt-4"
+              style={{
+                height: 48,
+                border: "none",
+                borderRadius: 14,
+                fontWeight: 700,
+                color: "#fff",
+                background:
+                  "linear-gradient(135deg,#10b981,#059669)",
+                boxShadow:
+                  "0 14px 34px rgba(16,185,129,.24)",
+              }}
+            >
+              {loading
+                ? "Creating..."
+                : "Create Account"}
+            </button>
+
+            <div
+              style={{
+                textAlign:
+                  "center",
+                fontSize:
+                  ".8rem",
+                color:
+                  "#94a3b8",
+                marginTop: 14,
+              }}
+            >
+              By continuing
+              you agree to
+              Terms &
+              Privacy.
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
+
+/* helpers */
+
+const glowTop = {
+  position: "absolute",
+  top: -80,
+  right: -80,
+  width: 280,
+  height: 280,
+  borderRadius: "50%",
+  background:
+    "rgba(16,185,129,.12)",
+};
+
+const glowBottom = {
+  position: "absolute",
+  bottom: -100,
+  left: -100,
+  width: 320,
+  height: 320,
+  borderRadius: "50%",
+  background:
+    "rgba(16,185,129,.08)",
+};
+
+const logoBox = {
+  width: 42,
+  height: 42,
+  borderRadius: 12,
+  background:
+    "linear-gradient(135deg,#10b981,#059669)",
+  display: "grid",
+  placeItems: "center",
+  color: "#fff",
+  fontSize: 20,
+  boxShadow:
+    "0 14px 28px rgba(16,185,129,.28)",
+};
+
+const linkStyle = {
+  color: "#10b981",
+  textDecoration: "none",
+  fontWeight: 700,
+};
+
+const labelStyle = {
+  fontSize: ".88rem",
+  fontWeight: 600,
+  color: "#374151",
+  marginBottom: 8,
+  display: "block",
+};
+
+const inputWrap = {
+  height: 48,
+  border:
+    "1px solid #dbe3ea",
+  borderRadius: 14,
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding:
+    "0 14px",
+  background: "#fff",
+};
+
+const cleanInput = {
+  height: "100%",
+  boxShadow: "none",
+  padding: 0,
+  background:
+    "transparent",
+};
+
+const eyeBtn = {
+  border: "none",
+  background:
+    "transparent",
+  color: "#94a3b8",
+};
+
+const roleBtn = (active) => ({
+  height: 44,
+  borderRadius: 10,
+  fontWeight: 700,
+  fontSize: ".86rem",
+  background: active
+    ? "#fff"
+    : "transparent",
+  color: active
+    ? "#0f172a"
+    : "#64748b",
+  boxShadow: active
+    ? "0 8px 18px rgba(15,23,42,.06)"
+    : "none",
+});

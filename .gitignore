@@ -1,8 +1,63 @@
+# =========================
+# Python / Django
+# =========================
 venv/
+env/
+ENV/
+
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Django database
 db.sqlite3
-media/
-node_modules/
+
+# Environment variables
 .env
 
+# Media uploads
+media/
+
+# Static collected files
+staticfiles/
+
+# Logs
+*.log
+
+# =========================
+# Celery
+# =========================
+celerybeat-schedule
+celerybeat-schedule-shm
+celerybeat-schedule-wal
+
+# =========================
+# React / Node
+# =========================
+node_modules/
+build/
+dist/
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Pytest / cache
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Misc
+# =========================
+*.sqlite3

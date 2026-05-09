@@ -109,7 +109,7 @@ OWNER – PROPERTY LOCATION
  * PUT /owner/property/location/:id/
  */
 export const updatePropertyLocation = async (propertyId, locationData) => {
-  const res = await api.put(
+  const res = await api.patch(
     `/owner/property/location/${propertyId}/`,
     locationData
   );
@@ -155,5 +155,31 @@ export const deleteProperty = async (propertyId) => {
   const res = await api.delete(
     `/owner/properties/${propertyId}/delete/`
   );
+  return res.data;
+};
+
+
+
+/*
+====================================================
+PUBLIC – ACTIVE PROPERTY LISTING (READ ONLY)
+====================================================
+*/
+
+/**
+ * Get single ACTIVE property (public)
+ * GET /properties/:id/
+ */
+export const getPublicPropertyDetail = async (propertyId) => {
+  const res = await api.get(`/properties/${propertyId}/`);
+  return res.data;
+};
+
+/**
+ * Get all ACTIVE properties (public) with optional filters
+ * GET /properties/?search=...&city=...
+ */
+export const getPublicProperties = async (params = {}) => {
+  const res = await api.get("/properties/", { params });
   return res.data;
 };

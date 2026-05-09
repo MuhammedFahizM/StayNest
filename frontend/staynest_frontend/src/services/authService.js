@@ -1,12 +1,5 @@
 import api from "./api";
 
-// Combined Register (for user + owner)
-// export const register = async (formData) => {
-//   const response = await api.post("/accounts/register/", formData, {
-//     headers: { "Content-Type": "multipart/form-data" },
-//   });
-//   return response;
-// };
 
 export const register = async (formData) => {
   const response = await api.post("/accounts/register/", formData);

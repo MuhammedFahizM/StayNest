@@ -24,13 +24,31 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+
+    # Common fields for BOTH user and owner
+    phone = models.CharField(max_length=15, blank=True)
+    address = models.TextField(blank=True)
+
+    profile_photo = models.ImageField(
+        upload_to="profile_photos/",
+        null=True,
+        blank=True
+    )
+
+    # Proof uploaded during registration (read-only later)
+    proof = models.FileField(
+        upload_to=user_proof_upload_to,
+        null=True,
+        blank=True
+    )
+
+    # Used ONLY for owner approval logic
     is_approved = models.BooleanField(default=False)
-    proof = models.FileField(upload_to=user_proof_upload_to, null=True, blank=True)  # <-- added
 
     def __str__(self):
-        # some projects use email, some username — keep username fallback
         username = getattr(self.user, "username", None) or getattr(self.user, "email", None)
         return f"{username} - {self.role}"
+
 
 
 class Owner(models.Model):
@@ -45,7 +63,15 @@ class Owner(models.Model):
         upload_to="owner_profiles/",
         null=True,
         blank=True
-    ) 
+    )
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
+
+    bank_account_number = models.CharField(max_length=20, blank=True, null=True)
+    bank_ifsc_code = models.CharField(max_length=11, blank=True, null=True)
+    bank_beneficiary_name = models.CharField(max_length=100, blank=True, null=True)
+     
     def __str__(self):
         # keep using email if available
         return getattr(self.user, "email", str(self.user))
@@ -56,18 +82,26 @@ from django.dispatch import receiver
 
 @receiver(post_save, sender=Owner)
 def sync_profile_on_owner_verification(sender, instance, **kwargs):
-    """
-    Source of truth:
-    Owner.is_verified == True
-
-    Effect:
-    Profile.is_approved == True
-    """
     if instance.is_verified:
         profile = instance.user.profile
         if not profile.is_approved:
             profile.is_approved = True
             profile.save(update_fields=["is_approved"])
+            # Notify owner of approval
+            try:
+                from bookings.models import Notification
+                from bookings.ledger_utils import _notify
+                _notify(
+                    recipient=instance.user,
+                    notif_type=Notification.NotifType.ACCOUNT_APPROVED,
+                    title="Owner account approved!",
+                    message=(
+                        "Congratulations! Your owner account has been verified by StayNest. "
+                        "You can now list your properties and start receiving bookings."
+                    ),
+                )
+            except Exception:
+                pass
 
 
 

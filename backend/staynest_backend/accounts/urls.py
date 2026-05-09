@@ -4,6 +4,7 @@ from .views import (
     LoginView,
     OwnerDashboardView,
     ResetPasswordView,
+    UserProfileView,
     VerifyEmailView,
     CombinedRegisterView,
     ResendVerificationView,
@@ -35,8 +36,24 @@ urlpatterns = [
     
     path("admin/owners/", AdminOwnerProfileListView.as_view(), name="admin-owner-profiles"),
 
+    path("user/profile/", UserProfileView.as_view(), name="user-profile"),
+
 
 
 ]
 
 
+from .views import PublicUserProfileView, PublicOwnerProfileView
+
+urlpatterns += [
+    path(
+        "public/user/<int:user_id>/",
+        PublicUserProfileView.as_view(),
+        name="public-user-profile",
+    ),
+    path(
+        "public/owner/<int:owner_id>/",
+        PublicOwnerProfileView.as_view(),
+        name="public-owner-profile",
+    ),
+]

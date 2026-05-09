@@ -1,11 +1,12 @@
 import { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 export default function ProtectedRoute({ children, role }) {
   const { user, loading } = useContext(AuthContext);
+  const location = useLocation();
 
-  // Wait while AuthContext loads the user from localStorage
+  // Wait while AuthContext loads
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center text-xl">
@@ -14,12 +15,18 @@ export default function ProtectedRoute({ children, role }) {
     );
   }
 
-  // If not logged in → redirect to login
+  // Not logged in → remember where user tried to go
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to="/login"
+        state={{ from: location }}
+        replace
+      />
+    );
   }
 
-  // If specific role required → check it
+  // Wrong role → block
   if (role && user.role !== role) {
     return <Navigate to="/" replace />;
   }

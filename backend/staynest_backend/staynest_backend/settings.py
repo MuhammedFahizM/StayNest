@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-2-&)ic(v_0-!uk_m21g(=8v@jxe0pr3o^a92#@xpkx(vor#t6d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -172,8 +172,8 @@ FRONTEND_URL = "http://localhost:5173"
 # EMAIL_HOST = "smtp.gmail.com"
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "your gmail"
-# EMAIL_HOST_PASSWORD = "your app password"
+# EMAIL_HOST_USER = "your_project_email"
+# EMAIL_HOST_PASSWORD = "your_project_email_app_password"
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
@@ -203,4 +203,38 @@ CELERY_TASK_ALWAYS_EAGER = False   # Make tasks run asynchronously
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+
+
+RAZORPAY_KEY_ID = "your_test_key_id"
+RAZORPAY_KEY_SECRET = "your_secret_key"
+
+
+RAZORPAY_WEBHOOK_SECRET = "your_webhook secret"
+
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "visibility_timeout": 3600 * 5,  # 5 hours
+}
+
+CELERY_TIMEZONE = "Asia/Kolkata"
+CELERY_ENABLE_UTC = False
+
+from celery.schedules import crontab
+CELERYBEAT_SCHEDULE = {
+        "create-monthly-ledgers": {
+            "task": "bookings.tasks.create_monthly_ledger_entries",
+            "schedule": crontab(hour=0, minute=5, day_of_month=1),
+        },
+        "create-monthly-offline-registers": {
+            "task": "bookings.tasks.create_monthly_offline_register_entries",
+            "schedule": crontab(hour=0, minute=10, day_of_month=1),
+        },
+        "payment-reminders": {
+            "task": "bookings.tasks.send_payment_reminders",
+            "schedule": crontab(hour=9, minute=0),
+        },
+    }
 

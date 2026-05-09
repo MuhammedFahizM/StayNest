@@ -1,342 +1,785 @@
-// import { useState, useEffect } from "react";
-// import { getOwnerProfile, updateOwnerProfile } from "../services/ownerService";
-// import { useNavigate } from "react-router-dom";
-// import { useContext } from "react";
-// import { AuthContext } from "../context/AuthContext";
-
-
-// export default function OwnerProfileEdit() {
-//     const [form, setForm] = useState({});
-//     const [file, setFile] = useState(null);
-//     const [loading, setLoading] = useState(false);
-//     const navigate = useNavigate();
-//     const { updateUser } = useContext(AuthContext);
-
-
-//     useEffect(() => {
-//         getOwnerProfile().then(setForm);
-//     }, []);
-
-//     const handleSubmit = async (e) => {
-//         e.preventDefault();
-//         setLoading(true);
-
-//         try {
-//             const data = new FormData();
-//             ["full_name", "phone", "address"].forEach(
-//                 (f) => form[f] && data.append(f, form[f])
-//             );
-//             if (file) data.append("profile_photo", file);
-
-//             await updateOwnerProfile(data);
-
-//             // 🔑 Fetch latest profile from backend
-//             const updatedProfile = await getOwnerProfile();
-
-//             // 🔑 Sync AuthContext (navbar updates instantly)
-//             updateUser({
-//                 full_name: updatedProfile.full_name,
-//                 profile_image: updatedProfile.profile_photo,
-//             });
-
-//             navigate("/owner/profile");
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
-
-
-//     return (
-//         <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 pt-28 px-4">
-//             <div className="max-w-3xl mx-auto">
-
-//                 <form
-//                     onSubmit={handleSubmit}
-//                     className="bg-white/70 backdrop-blur-xl border border-white/70 rounded-2xl shadow-lg p-8"
-//                 >
-//                     <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-//                         Edit Profile
-//                     </h2>
-
-//                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-//                         {/* FULL NAME */}
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                 Full Name
-//                             </label>
-//                             <input
-//                                 type="text"
-//                                 value={form.full_name || ""}
-//                                 onChange={(e) =>
-//                                     setForm({ ...form, full_name: e.target.value })
-//                                 }
-//                                 className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                             />
-//                         </div>
-
-//                         {/* EMAIL (READ-ONLY) */}
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                 Email
-//                             </label>
-//                             <input
-//                                 type="email"
-//                                 value={form.email || ""}
-//                                 disabled
-//                                 className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed"
-//                             />
-//                         </div>
-
-//                         {/* PHONE */}
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                 Phone
-//                             </label>
-//                             <input
-//                                 type="text"
-//                                 value={form.phone || ""}
-//                                 onChange={(e) =>
-//                                     setForm({ ...form, phone: e.target.value })
-//                                 }
-//                                 className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                             />
-//                         </div>
-
-//                         {/* STATUS (READ-ONLY) */}
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                 Account Status
-//                             </label>
-//                             <input
-//                                 type="text"
-//                                 value={
-//                                     form.is_owner_approved ? "Approved" : "Pending Approval"
-//                                 }
-//                                 disabled
-//                                 className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed"
-//                             />
-//                         </div>
-
-//                         {/* ADDRESS */}
-//                         <div className="md:col-span-2">
-//                             <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                 Address
-//                             </label>
-//                             <textarea
-//                                 rows={3}
-//                                 value={form.address || ""}
-//                                 onChange={(e) =>
-//                                     setForm({ ...form, address: e.target.value })
-//                                 }
-//                                 className="w-full p-3 rounded-lg bg-white/80 border border-gray-300 text-gray-800"
-//                             />
-//                         </div>
-
-//                         {/* PROFILE PHOTO */}
-//                         <div className="md:col-span-2">
-//                             <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                 Profile Photo
-//                             </label>
-//                             <input
-//                                 type="file"
-//                                 onChange={(e) => setFile(e.target.files[0])}
-//                                 className="w-full text-sm"
-//                             />
-//                             <p className="text-xs text-gray-500 mt-1">
-//                                 JPG or PNG. Square images work best.
-//                             </p>
-//                         </div>
-//                     </div>
-
-//                     {/* ACTIONS */}
-//                     <div className="mt-8 flex items-center gap-4">
-//                         <button
-//                             type="submit"
-//                             disabled={loading}
-//                             className="
-//                 px-6 py-2 rounded-xl
-//                 bg-blue-500 text-white font-semibold
-//                 hover:bg-blue-600 transition
-//                 disabled:opacity-50
-//               "
-//                         >
-//                             {loading ? "Saving..." : "Save Changes"}
-//                         </button>
-
-//                         <button
-//                             type="button"
-//                             onClick={() => navigate("/owner/profile")}
-//                             className="text-gray-600 hover:underline"
-//                         >
-//                             Cancel
-//                         </button>
-//                     </div>
-//                 </form>
-
-//             </div>
-//         </div>
-//     );
-// }
-
-
-import { useState, useEffect, useContext } from "react";
-import { getOwnerProfile, updateOwnerProfile } from "../services/ownerService";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import {
+  useState,
+  useEffect,
+  useContext,
+} from "react";
+import {
+  useNavigate,
+} from "react-router-dom";
 import toast from "react-hot-toast";
 
+import {
+  getOwnerProfile,
+  updateOwnerProfile,
+} from "../services/ownerService";
+
+import {
+  AuthContext,
+} from "../context/AuthContext";
 
 export default function OwnerProfileEdit() {
-    const [form, setForm] = useState({});
-    const [file, setFile] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-    const { updateUser } = useContext(AuthContext);
+  const navigate =
+    useNavigate();
 
-    useEffect(() => {
-        getOwnerProfile().then(setForm);
-    }, []);
+  const { updateUser } =
+    useContext(AuthContext);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+  const [form, setForm] =
+    useState({});
 
-        try {
-            const data = new FormData();
-            ["full_name", "phone", "address"].forEach(
-                (f) => form[f] && data.append(f, form[f])
+  const [file, setFile] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  useEffect(() => {
+    getOwnerProfile().then(
+      setForm
+    );
+  }, []);
+
+  const handleChange = (
+    key,
+    value
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSubmit =
+    async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      try {
+        const data =
+          new FormData();
+
+        [
+          "full_name",
+          "phone",
+          "address",
+          "city",
+          "state",
+          "postal_code",
+          "bank_account_number",
+          "bank_ifsc_code",
+          "bank_beneficiary_name",
+        ].forEach((f) => {
+          if (form[f]) {
+            data.append(
+              f,
+              form[f]
             );
-            if (file) data.append("profile_photo", file);
+          }
+        });
 
-            await updateOwnerProfile(data);
-
-            const updatedProfile = await getOwnerProfile();
-
-            updateUser({
-                full_name: updatedProfile.full_name,
-                profile_image: updatedProfile.profile_photo,
-            });
-
-            /* ✅ SUCCESS TOAST */
-            toast.success("Profile updated successfully");
-
-            navigate("/owner/profile");
-
-        } finally {
-            setLoading(false);
+        if (file) {
+          data.append(
+            "profile_photo",
+            file
+          );
         }
+
+        await updateOwnerProfile(
+          data
+        );
+
+        const updated =
+          await getOwnerProfile();
+
+        updateUser({
+          full_name:
+            updated.full_name,
+          profile_image:
+            updated.profile_photo,
+        });
+
+        toast.success(
+          "Profile updated successfully"
+        );
+
+        navigate(
+          "/owner/profile"
+        );
+      } catch {
+        toast.error(
+          "Unable to update profile"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
 
-    return (
-        <div className="min-vh-100 pt-5 px-3">
-            <div className="container pt-5">
-                <form
-                    onSubmit={handleSubmit}
-                    className="card shadow border rounded-3 position-relative p-4 mx-auto"
-                    style={{ maxWidth: "720px" }}
-                >
-                    <h2 className="h4 fw-semibold text-dark mb-4">
-                        Edit Profile
-                    </h2>
+  return (
+    <div
+      style={{
+        minHeight:
+          "100vh",
+        background:
+          "linear-gradient(180deg,#f8fafc,#ffffff)",
+        padding:
+          "26px 0 60px",
+      }}
+    >
+      <div
+        className="container"
+        style={{
+          maxWidth: 920,
+        }}
+      >
+        {/* Back */}
+        <button
+          onClick={() =>
+            navigate(
+              "/owner/profile"
+            )
+          }
+          style={
+            backBtn
+          }
+        >
+          <i className="bi bi-arrow-left" />
+          Back to Profile
+        </button>
 
-                    <div className="row g-3">
-
-                        {/* FULL NAME */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label fw-medium">Full Name</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={form.full_name || ""}
-                                onChange={(e) =>
-                                    setForm({ ...form, full_name: e.target.value })
-                                }
-                            />
-                        </div>
-
-                        {/* EMAIL */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label fw-medium">Email</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                value={form.email || ""}
-                                disabled
-                            />
-                        </div>
-
-                        {/* PHONE */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label fw-medium">Phone</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={form.phone || ""}
-                                onChange={(e) =>
-                                    setForm({ ...form, phone: e.target.value })
-                                }
-                            />
-                        </div>
-
-                        {/* STATUS */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label fw-medium">Account Status</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={form.is_owner_approved ? "Approved" : "Pending Approval"}
-                                disabled
-                            />
-                        </div>
-
-                        {/* ADDRESS */}
-                        <div className="col-12">
-                            <label className="form-label fw-medium">Address</label>
-                            <textarea
-                                rows={3}
-                                className="form-control"
-                                value={form.address || ""}
-                                onChange={(e) =>
-                                    setForm({ ...form, address: e.target.value })
-                                }
-                            />
-                        </div>
-
-                        {/* PROFILE PHOTO */}
-                        <div className="col-12">
-                            <label className="form-label fw-medium">Profile Photo</label>
-                            <input
-                                type="file"
-                                className="form-control"
-                                onChange={(e) => setFile(e.target.files[0])}
-                            />
-                            <small className="text-muted">
-                                JPG or PNG. Square images work best.
-                            </small>
-                        </div>
-                    </div>
-
-                    {/* ACTIONS */}
-                    <div className="mt-4 d-flex gap-3">
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            disabled={loading}
-                        >
-                            {loading ? "Saving..." : "Save Changes"}
-                        </button>
-
-                        <button
-                            type="button"
-                            className="btn btn-link text-secondary"
-                            onClick={() => navigate("/owner/profile")}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
+        {/* Hero */}
+        <div
+          style={
+            hero
+          }
+        >
+          <div>
+            <div
+              style={
+                tag
+              }
+            >
+              OWNER ACCOUNT
             </div>
+
+            <h2
+              style={{
+                margin:
+                  "6px 0 4px",
+                fontWeight: 800,
+                color:
+                  "#0f172a",
+              }}
+            >
+              Edit Profile
+            </h2>
+
+            <p
+              style={
+                muted
+              }
+            >
+              Update your
+              personal info,
+              payout details
+              and profile
+              photo.
+            </p>
+          </div>
+
+          <div
+            style={
+              avatarBox
+            }
+          >
+            {form
+              ?.profile_photo ? (
+              <img
+                src={
+                  form.profile_photo
+                }
+                alt=""
+                style={{
+                  width:
+                    "100%",
+                  height:
+                    "100%",
+                  objectFit:
+                    "cover",
+                }}
+              />
+            ) : (
+              <i className="bi bi-person-fill" />
+            )}
+          </div>
         </div>
-    );
+
+        <form
+          onSubmit={
+            handleSubmit
+          }
+        >
+          <div className="row g-4">
+            {/* Left */}
+            <div className="col-12 col-lg-7">
+              <div
+                style={
+                  card
+                }
+              >
+                <SectionTitle
+                  icon="bi-person-badge"
+                  title="Personal Information"
+                />
+
+                <div className="row g-3">
+                  <Field
+                    label="Full Name"
+                    value={
+                      form.full_name ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "full_name",
+                        v
+                      )
+                    }
+                  />
+
+                  <Field
+                    label="Email"
+                    value={
+                      form.email ||
+                      ""
+                    }
+                    disabled
+                  />
+
+                  <Field
+                    label="Phone"
+                    value={
+                      form.phone ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "phone",
+                        v
+                      )
+                    }
+                  />
+
+                  <Field
+                    label="Status"
+                    value={
+                      form.is_owner_approved
+                        ? "Verified"
+                        : "Pending"
+                    }
+                    disabled
+                  />
+
+                  <div className="col-12">
+                    <label
+                      style={
+                        label
+                      }
+                    >
+                      Address
+                    </label>
+
+                    <textarea
+                      rows="3"
+                      style={{
+                        ...input,
+                        resize:
+                          "vertical",
+                      }}
+                      value={
+                        form.address ||
+                        ""
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        handleChange(
+                          "address",
+                          e
+                            .target
+                            .value
+                        )
+                      }
+                    />
+                  </div>
+
+                  <Field
+                    label="City"
+                    value={
+                      form.city ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "city",
+                        v
+                      )
+                    }
+                  />
+
+                  <Field
+                    label="State"
+                    value={
+                      form.state ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "state",
+                        v
+                      )
+                    }
+                  />
+
+                  <Field
+                    label="Postal Code"
+                    value={
+                      form.postal_code ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "postal_code",
+                        v
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Right */}
+            <div className="col-12 col-lg-5">
+              <div
+                style={{
+                  ...card,
+                  marginBottom: 16,
+                }}
+              >
+                <SectionTitle
+                  icon="bi-bank"
+                  title="Bank Details"
+                />
+
+                <div className="row g-3">
+                  <Field
+                    label="Account Holder"
+                    value={
+                      form.bank_beneficiary_name ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "bank_beneficiary_name",
+                        v
+                      )
+                    }
+                  />
+
+                  <Field
+                    label="IFSC Code"
+                    value={
+                      form.bank_ifsc_code ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "bank_ifsc_code",
+                        v.toUpperCase()
+                      )
+                    }
+                  />
+
+                  <Field
+                    label="Account Number"
+                    value={
+                      form.bank_account_number ||
+                      ""
+                    }
+                    onChange={(
+                      v
+                    ) =>
+                      handleChange(
+                        "bank_account_number",
+                        v
+                      )
+                    }
+                  />
+                </div>
+              </div>
+
+              <div
+                style={
+                  card
+                }
+              >
+                <SectionTitle
+                  icon="bi-image"
+                  title="Profile Photo"
+                />
+
+                <label
+                  style={
+                    uploadBox
+                  }
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{
+                      display:
+                        "none",
+                    }}
+                    onChange={(
+                      e
+                    ) =>
+                      setFile(
+                        e
+                          .target
+                          .files?.[0]
+                      )
+                    }
+                  />
+
+                  <i className="bi bi-cloud-arrow-up fs-4 text-success" />
+
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontWeight: 700,
+                      color:
+                        "#0f172a",
+                      fontSize:
+                        ".88rem",
+                    }}
+                  >
+                    {file
+                      ? file.name
+                      : "Upload new photo"}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 4,
+                      color:
+                        "#64748b",
+                      fontSize:
+                        ".78rem",
+                    }}
+                  >
+                    JPG / PNG •
+                    square images
+                    recommended
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              justifyContent:
+                "flex-end",
+              marginTop: 22,
+              flexWrap:
+                "wrap",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  "/owner/profile"
+                )
+              }
+              style={
+                ghostBtn
+              }
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={
+                loading
+              }
+              style={{
+                ...primaryBtn,
+                opacity:
+                  loading
+                    ? 0.8
+                    : 1,
+              }}
+            >
+              {loading && (
+                <span className="spinner-border spinner-border-sm me-2" />
+              )}
+              {loading
+                ? "Saving..."
+                : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
+
+/* Components */
+
+function SectionTitle({
+  icon,
+  title,
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems:
+          "center",
+        gap: 10,
+        marginBottom: 18,
+      }}
+    >
+      <div
+        style={
+          iconBox
+        }
+      >
+        <i
+          className={`bi ${icon}`}
+        />
+      </div>
+
+      <h6
+        style={{
+          margin: 0,
+          fontWeight: 800,
+          color:
+            "#0f172a",
+          fontSize:
+            ".95rem",
+        }}
+      >
+        {title}
+      </h6>
+    </div>
+  );
+}
+
+function Field({
+  label: text,
+  value,
+  onChange,
+  disabled = false,
+}) {
+  return (
+    <div className="col-12 col-md-6">
+      <label
+        style={label}
+      >
+        {text}
+      </label>
+
+      <input
+        type="text"
+        value={value}
+        disabled={
+          disabled
+        }
+        style={{
+          ...input,
+          background:
+            disabled
+              ? "#f8fafc"
+              : "#fff",
+          color:
+            disabled
+              ? "#94a3b8"
+              : "#0f172a",
+        }}
+        onChange={(e) =>
+          onChange?.(
+            e.target.value
+          )
+        }
+      />
+    </div>
+  );
+}
+
+/* Styles */
+
+const hero = {
+  background: "#fff",
+  border:
+    "1px solid #e2e8f0",
+  borderRadius: 22,
+  padding: 22,
+  marginBottom: 22,
+  display: "flex",
+  justifyContent:
+    "space-between",
+  alignItems: "center",
+  gap: 16,
+  boxShadow:
+    "0 10px 24px rgba(15,23,42,.04)",
+};
+
+const card = {
+  background: "#fff",
+  border:
+    "1px solid #e2e8f0",
+  borderRadius: 20,
+  padding: 22,
+  boxShadow:
+    "0 10px 24px rgba(15,23,42,.04)",
+  transition:
+    "all .2s ease",
+};
+
+const tag = {
+  color: "#10b981",
+  fontWeight: 800,
+  fontSize: ".74rem",
+  letterSpacing:
+    ".06em",
+};
+
+const muted = {
+  margin: 0,
+  color: "#64748b",
+  fontSize: ".9rem",
+};
+
+const label = {
+  display: "block",
+  marginBottom: 7,
+  fontWeight: 700,
+  fontSize: ".78rem",
+  color: "#475569",
+  textTransform:
+    "uppercase",
+  letterSpacing:
+    ".04em",
+};
+
+const input = {
+  width: "100%",
+  height: 44,
+  border:
+    "1px solid #e2e8f0",
+  borderRadius: 14,
+  padding:
+    "0 14px",
+  outline: "none",
+  fontSize: ".92rem",
+  transition:
+    "all .18s ease",
+};
+
+const iconBox = {
+  width: 38,
+  height: 38,
+  borderRadius: 12,
+  display: "grid",
+  placeItems:
+    "center",
+  background:
+    "rgba(16,185,129,.10)",
+  color: "#10b981",
+};
+
+const avatarBox = {
+  width: 66,
+  height: 66,
+  borderRadius: 18,
+  overflow: "hidden",
+  background:
+    "#f1f5f9",
+  display: "grid",
+  placeItems:
+    "center",
+  color: "#94a3b8",
+  fontSize: 26,
+};
+
+const uploadBox = {
+  border:
+    "2px dashed #dbeafe",
+  borderRadius: 18,
+  padding: "24px",
+  background:
+    "#f8fafc",
+  textAlign: "center",
+  cursor: "pointer",
+  width: "100%",
+  transition:
+    "all .18s ease",
+};
+
+const backBtn = {
+  border: "none",
+  background:
+    "transparent",
+  padding: 0,
+  marginBottom: 18,
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  color: "#64748b",
+  fontWeight: 700,
+};
+
+const ghostBtn = {
+  height: 46,
+  border:
+    "1px solid #e2e8f0",
+  background: "#fff",
+  borderRadius: 14,
+  padding:
+    "0 18px",
+  fontWeight: 700,
+  color: "#475569",
+};
+
+const primaryBtn = {
+  height: 46,
+  border: "none",
+  borderRadius: 14,
+  padding:
+    "0 20px",
+  background:
+    "linear-gradient(135deg,#10b981,#059669)",
+  color: "#fff",
+  fontWeight: 800,
+  boxShadow:
+    "0 12px 24px rgba(16,185,129,.18)",
+};

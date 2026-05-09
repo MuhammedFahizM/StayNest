@@ -1,309 +1,543 @@
-// import { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-
-// import {
-//   getOwnerProperties,
-//   togglePropertyStatus,
-//   submitProperty,
-// } from "../services/propertyService";
-
-// import PropertyCard from "../components/PropertyCard";
-
-// export default function PropertyList() {
-//   const navigate = useNavigate();
-
-//   const [properties, setProperties] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-
-//   const fetchProperties = async () => {
-//     try {
-//       const data = await getOwnerProperties();
-//       setProperties(data);
-//     } catch (err) {
-//       setError("Unable to load your properties. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchProperties();
-//   }, []);
-
-//   const handleToggle = async (propertyId) => {
-//     try {
-//       await togglePropertyStatus(propertyId);
-//       fetchProperties();
-//     } catch {
-//       alert("Unable to update property status.");
-//     }
-//   };
-
-//   const handleSubmit = async (propertyId) => {
-//     try {
-//       await submitProperty(propertyId);
-//       fetchProperties();
-//     } catch (err) {
-//       alert(
-//         err?.response?.data?.error ||
-//           "Unable to submit property. Please check requirements."
-//       );
-//     }
-//   };
-
-//   /* Loading */
-//   if (loading) {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center text-gray-700">
-//         Loading properties...
-//       </div>
-//     );
-//   }
-
-//   /* Error */
-//   if (error) {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center">
-//         <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-xl">
-//           {error}
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 pt-28 px-4">
-//       <div className="max-w-6xl mx-auto">
-//         {/* Header */}
-//         <div className="flex items-center justify-between mb-8">
-//           <div>
-//             <h1 className="text-3xl font-bold text-gray-800">
-//               My Properties
-//             </h1>
-//             <p className="text-gray-600 mt-1">
-//               Manage your listings and visibility
-//             </p>
-//           </div>
-
-//           <button
-//             onClick={() => navigate("/owner/properties/new")}
-//             className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl shadow transition"
-//           >
-//             + Add Property
-//           </button>
-//         </div>
-
-//         {/* Empty state */}
-//         {properties.length === 0 && (
-//           <div className="bg-white/70 backdrop-blur-xl border border-white/70 rounded-2xl p-10 text-center text-gray-600">
-//             <p className="text-lg font-medium">
-//               No properties added yet
-//             </p>
-//             <p className="text-sm mt-2">
-//               Start by creating your first property listing.
-//             </p>
-//           </div>
-//         )}
-
-//         {/* Property grid */}
-//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-//           {properties.map((property) => (
-//             <PropertyCard
-//               key={property.id}
-//               property={property}
-//               onEdit={() =>
-//                 navigate(`/owner/properties/${property.id}`)
-//               }
-//               onToggle={() => handleToggle(property.id)}
-//               onSubmit={() => handleSubmit(property.id)}
-//             />
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useState,
+  useContext,
+} from "react";
+import {
+  useNavigate,
+} from "react-router-dom";
 import toast from "react-hot-toast";
 
 import {
   getOwnerProperties,
   togglePropertyStatus,
   submitProperty,
+  deleteProperty,
 } from "../services/propertyService";
 
-import PropertyCard from "../components/PropertyCard";
-import { deleteProperty } from "../services/propertyService";
+import {
+  AuthContext,
+} from "../context/AuthContext";
 
+import PropertyCard from "../components/PropertyCard";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function PropertyList() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { user } =
+    useContext(AuthContext);
 
-  const fetchProperties = async () => {
-    try {
-      const data = await getOwnerProperties();
-      setProperties(data);
-    } catch {
-      setError("Unable to load your properties. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [properties, setProperties] =
+    useState([]);
+
+  const [deleteState, setDeleteState] =
+    useState({
+      open: false,
+      property: null,
+    });
+
+  const isOwner =
+    user?.role ===
+    "owner";
+
+  const loadData =
+    async () => {
+      try {
+        const data =
+          await getOwnerProperties();
+
+        setProperties(
+          data || []
+        );
+      } catch {
+        setError(
+          "Unable to load your properties."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
-    fetchProperties();
+    loadData();
   }, []);
 
-  const handleToggle = async (property) => {
-    try {
-      await togglePropertyStatus(property.id);
-      toast.success(
-        property.status === "ACTIVE"
-          ? "Listing hidden from users"
-          : "Listing is now visible to users"
-      );
-      fetchProperties();
-    } catch {
-      toast.error("Unable to update listing visibility.");
-    }
-  };
+  const handleToggle =
+    async (
+      property
+    ) => {
+      try {
+        await togglePropertyStatus(
+          property.id
+        );
 
-  const handleSubmit = async (property) => {
-    try {
-      await submitProperty(property.id);
-      toast.success("Listing submitted for admin review");
-      fetchProperties();
-    } catch (err) {
-      toast.error(
-        err?.response?.data?.error ||
-        "Unable to submit property. Please check requirements."
-      );
-    }
-  };
+        toast.success(
+          property.status ===
+            "ACTIVE"
+            ? "Listing hidden"
+            : "Listing activated"
+        );
 
-  const handleDelete = async (property) => {
-    if (
-      !window.confirm(
-        "This will permanently delete the property and all its data. This action cannot be undone. Continue?"
-      )
-    ) {
-      return;
-    }
+        loadData();
+      } catch {
+        toast.error(
+          "Unable to update listing"
+        );
+      }
+    };
 
-    try {
-      await deleteProperty(property.id);
-      toast.success("Property permanently deleted");
-      fetchProperties();
-    } catch {
-      toast.error("Unable to delete property");
-    }
-  };
+  const handleDelete =
+    async () => {
+      const item =
+        deleteState.property;
 
+      try {
+        await deleteProperty(
+          item.id
+        );
 
-  /* -------------------------------------
-     Loading
-  ------------------------------------- */
+        toast.success(
+          "Property deleted"
+        );
+
+        setDeleteState({
+          open: false,
+          property: null,
+        });
+
+        loadData();
+      } catch {
+        toast.error(
+          "Unable to delete property"
+        );
+      }
+    };
+
+  /* Loading */
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center text-secondary">
-        Loading properties…
-      </div>
+      <Wrap>
+        <CenterCard>
+          <div className="spinner-border text-success mb-3" />
+          <h6
+            style={
+              title
+            }
+          >
+            Loading Listings
+          </h6>
+          <p
+            style={
+              muted
+            }
+          >
+            Please wait...
+          </p>
+        </CenterCard>
+      </Wrap>
     );
   }
 
-  /* -------------------------------------
-     Error
-  ------------------------------------- */
+  /* Error */
   if (error) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center">
-        <div className="alert alert-danger px-4 py-3">
-          {error}
-        </div>
-      </div>
+      <Wrap>
+        <CenterCard>
+          <div
+            style={
+              dangerIcon
+            }
+          >
+            <i className="bi bi-exclamation-triangle" />
+          </div>
+
+          <h6
+            style={
+              title
+            }
+          >
+            Failed to Load
+          </h6>
+
+          <p
+            style={
+              muted
+            }
+          >
+            {error}
+          </p>
+        </CenterCard>
+      </Wrap>
     );
   }
 
   return (
-    <div className="min-vh-100 pt-2 px-3">
-      <div className="container pt-2 pb-5">
-
-        {/* Header */}
-        <div className="d-flex align-items-center justify-content-between mb-4">
-          <div>
-            <h2 className="mb-1">Your Listings</h2>
-            <p className="text-muted mb-3">
-              Manage and review your properties
-            </p>
-
-          </div>
-
-          <button
-            onClick={() => navigate("/owner/properties/new")}
-            className="btn btn-primary"
+    <>
+      <Wrap>
+        <div
+          className="container"
+          style={{
+            maxWidth: 1260,
+          }}
+        >
+          {/* Hero */}
+          <div
+            style={
+              hero
+            }
           >
-            + Add Property
-          </button>
-        </div>
-
-        {/* Empty State */}
-        {properties.length === 0 && (
-          <div className="card border shadow-sm text-center p-5 text-muted">
-            <h5 className="fw-semibold mb-2">
-              You haven’t added any listings yet
-            </h5>
-            <p className="mb-0">
-              Create your first property to get started.
-            </p>
-          </div>
-        )}
-
-        {/* Grid */}
-        {properties.length > 0 && (
-          <div className="row g-4">
-            {properties.map((property) => (
+            <div>
               <div
-                key={property.id}
-                className="col-12 col-md-6 col-lg-4"
+                style={
+                  tag
+                }
               >
-                {/* <PropertyCard
-                  property={property}
-                  onEdit={() =>
-                    navigate(`/owner/properties/${property.id}`)
-                  }
-                  onToggle={() => handleToggle(property)}
-                  onSubmit={() => handleSubmit(property)}
-                  onPreview={() =>
-                    navigate(`/owner/properties/${property.id}`)
-                  }
-                /> */}
-
-                <PropertyCard
-                  property={property}
-                  onView={() =>
-                    navigate(`/owner/properties/${property.id}`)
-                  }
-                  onEdit={() =>
-                    navigate(`/owner/properties/${property.id}/edit`)
-                  }
-                  onToggle={() => handleToggle(property)}
-                  onDelete={() => handleDelete(property)}
-                />
-
-
-
+                OWNER LISTINGS
               </div>
-            ))}
-          </div>
-        )}
 
-      </div>
+              <h2
+                style={{
+                  margin:
+                    "6px 0 4px",
+                  fontWeight: 800,
+                  color:
+                    "#0f172a",
+                }}
+              >
+                Your Properties
+              </h2>
+
+              <p
+                style={
+                  muted
+                }
+              >
+                Manage{" "}
+                {
+                  properties.length
+                }{" "}
+                listing
+                {properties.length !==
+                1
+                  ? "s"
+                  : ""}
+              </p>
+            </div>
+
+            {isOwner && (
+              <button
+                onClick={() =>
+                  navigate(
+                    "/owner/properties/new"
+                  )
+                }
+                style={
+                  primaryBtn
+                }
+                onMouseEnter={(
+                  e
+                ) => {
+                  e.currentTarget.style.transform =
+                    "translateY(-2px)";
+                }}
+                onMouseLeave={(
+                  e
+                ) => {
+                  e.currentTarget.style.transform =
+                    "translateY(0)";
+                }}
+              >
+                <i className="bi bi-plus-lg me-2" />
+                Add Property
+              </button>
+            )}
+          </div>
+
+          {/* Empty */}
+          {properties.length ===
+            0 && (
+            <div
+              style={
+                emptyBox
+              }
+            >
+              <div
+                style={
+                  emptyIcon
+                }
+              >
+                <i className="bi bi-house-door" />
+              </div>
+
+              <h5
+                style={{
+                  margin:
+                    "0 0 8px",
+                  fontWeight: 800,
+                }}
+              >
+                No Listings Yet
+              </h5>
+
+              <p
+                style={{
+                  margin:
+                    "0 0 18px",
+                  color:
+                    "#64748b",
+                }}
+              >
+                Add your first
+                property and
+                start getting
+                bookings.
+              </p>
+
+              <button
+                onClick={() =>
+                  navigate(
+                    "/owner/properties/new"
+                  )
+                }
+                style={
+                  primaryBtn
+                }
+              >
+                Add First Property
+              </button>
+            </div>
+          )}
+
+          {/* Grid */}
+          {properties.length >
+            0 && (
+            <div className="row g-4">
+              {properties.map(
+                (
+                  property,
+                  index
+                ) => (
+                  <div
+                    key={
+                      property.id
+                    }
+                    className="col-12 col-md-6 col-xl-4"
+                    style={{
+                      animation: `fadeInUp .45s ease forwards`,
+                      animationDelay: `${index * 0.05}s`,
+                      opacity: 1,
+                    }}
+                  >
+                    <PropertyCard
+                      property={
+                        property
+                      }
+                      onView={() =>
+                        navigate(
+                          `/owner/properties/${property.id}`
+                        )
+                      }
+                      onEdit={() =>
+                        navigate(
+                          `/owner/properties/${property.id}/edit`
+                        )
+                      }
+                      onToggle={() =>
+                        handleToggle(
+                          property
+                        )
+                      }
+                      onDelete={() =>
+                        setDeleteState(
+                          {
+                            open: true,
+                            property,
+                          }
+                        )
+                      }
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </Wrap>
+
+      {/* Delete Modal */}
+      <ConfirmModal
+        open={
+          deleteState.open
+        }
+        title="Delete Property"
+        message={`Delete "${deleteState.property?.property_name}" permanently? This cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={
+          handleDelete
+        }
+        onCancel={() =>
+          setDeleteState({
+            open: false,
+            property: null,
+          })
+        }
+      />
+    </>
+  );
+}
+
+/* Layout */
+
+function Wrap({
+  children,
+}) {
+  return (
+    <div
+      style={{
+        minHeight:
+          "100vh",
+        background:
+          "linear-gradient(180deg,#f8fafc,#ffffff)",
+        padding:
+          "26px 0 60px",
+      }}
+    >
+      {children}
     </div>
   );
 }
+
+function CenterCard({
+  children,
+}) {
+  return (
+    <div
+      style={{
+        maxWidth: 360,
+        margin:
+          "120px auto",
+        background:
+          "#fff",
+        border:
+          "1px solid #e2e8f0",
+        borderRadius: 22,
+        padding:
+          "28px",
+        textAlign:
+          "center",
+        boxShadow:
+          "0 14px 30px rgba(15,23,42,.05)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* Styles */
+
+const hero = {
+  background: "#fff",
+  border:
+    "1px solid #e2e8f0",
+  borderRadius: 22,
+  padding: 22,
+  marginBottom: 24,
+  display: "flex",
+  justifyContent:
+    "space-between",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: 16,
+  boxShadow:
+    "0 12px 26px rgba(15,23,42,.04)",
+};
+
+const primaryBtn = {
+  height: 46,
+  border: "none",
+  borderRadius: 14,
+  padding:
+    "0 18px",
+  background:
+    "linear-gradient(135deg,#10b981,#059669)",
+  color: "#fff",
+  fontWeight: 800,
+  boxShadow:
+    "0 12px 24px rgba(16,185,129,.18)",
+  transition:
+    "all .2s ease",
+};
+
+const tag = {
+  color: "#10b981",
+  fontWeight: 800,
+  fontSize: ".74rem",
+  letterSpacing:
+    ".06em",
+};
+
+const muted = {
+  margin: 0,
+  color: "#64748b",
+  fontSize: ".9rem",
+};
+
+const title = {
+  margin: 0,
+  fontWeight: 800,
+  color: "#0f172a",
+};
+
+const emptyBox = {
+  background: "#fff",
+  border:
+    "1px solid #e2e8f0",
+  borderRadius: 24,
+  padding:
+    "56px 24px",
+  textAlign:
+    "center",
+  boxShadow:
+    "0 12px 28px rgba(15,23,42,.04)",
+};
+
+const emptyIcon = {
+  width: 64,
+  height: 64,
+  borderRadius: 18,
+  margin:
+    "0 auto 16px",
+  display: "grid",
+  placeItems:
+    "center",
+  background:
+    "linear-gradient(135deg,#dcfce7,#ecfdf5)",
+  color: "#10b981",
+  fontSize: 24,
+};
+
+const dangerIcon = {
+  width: 54,
+  height: 54,
+  borderRadius: 16,
+  margin:
+    "0 auto 14px",
+  display: "grid",
+  placeItems:
+    "center",
+  background:
+    "#fef2f2",
+  color: "#ef4444",
+  fontSize: 22,
+};

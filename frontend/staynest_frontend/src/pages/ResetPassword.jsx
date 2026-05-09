@@ -1,303 +1,822 @@
-// // src/pages/ResetPassword.jsx
-// import { useState } from "react";
-// import { useParams, Link, useNavigate } from "react-router-dom";
-// import api from "../services/api";
-
-// export default function ResetPassword() {
-//     const { token } = useParams();
-//     const navigate = useNavigate();
-
-//     const [password, setPassword] = useState("");
-//     const [passwordConfirm, setPasswordConfirm] = useState("");
-//     const [showPassword, setShowPassword] = useState(false);
-//     const [showConfirm, setShowConfirm] = useState(false);
-//     const [error, setError] = useState("");
-//     const [message, setMessage] = useState("");
-//     const [loading, setLoading] = useState(false);
-
-//     const handleSubmit = async (e) => {
-//         e.preventDefault();
-//         setError("");
-//         setMessage("");
-
-//         if (password !== passwordConfirm) {
-//             setError("Passwords do not match.");
-//             return;
-//         }
-
-//         setLoading(true);
-//         try {
-//             await api.post("/accounts/reset-password/", {
-//                 token,
-//                 password,
-//                 password_confirm: passwordConfirm,
-//             });
-
-//             //   setMessage("Password reset successful. Redirecting to login...");
-//             //   setTimeout(() => navigate("/login"), 1500);
-//             // Use unified action-result page which auto-redirects to login
-//             navigate("/action-result?type=reset-success");
-
-//         } catch (err) {
-//             setError(err?.response?.data?.error || "Invalid or expired token.");
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
-
-//     const EyeIcon = ({ open }) =>
-//         open ? (
-//             // eye-off
-//             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-//                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.45 10.45 0 0 0 1.5 12c2.1 4.5 6.3 7.5 10.5 7.5 1.95 0 3.9-.6 5.7-1.65M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-//                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.23 6.23 3 3m18 18-3.23-3.23M15 12a3 3 0 0 0-3-3" />
-//             </svg>
-//         ) : (
-//             // eye
-//             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-//                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322C3.532 7.51 7.86 4.5 12 4.5c4.14 0 8.468 3.01 9.964 7.822a1.38 1.38 0 0 1 0 .856C20.468 16.49 16.14 19.5 12 19.5c-4.14 0-8.468-3.01-9.964-7.822a1.38 1.38 0 0 1 0-.856z" />
-//                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-//             </svg>
-//         );
-
-//     return (
-//         <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-sky-200 via-blue-200 to-cyan-200 px-4 py-12">
-//             <div className="pt-24 w-full max-w-3xl">
-//                 <div className="mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-//                     {/* Left info */}
-//                     <div className="hidden lg:flex items-center justify-center">
-//                         <div className="max-w-sm text-left">
-//                             <h3 className="text-3xl font-semibold text-gray-800 mb-3">Secure your account</h3>
-//                             <p className="text-gray-600">
-//                                 Create a new secure password. Passwords should be at least 8 characters.
-//                             </p>
-//                         </div>
-//                     </div>
-
-//                     {/* Right form card */}
-//                     <div className="mx-auto w-full max-w-md">
-//                         <div className="backdrop-blur-xl bg-white/60 border border-white/70 shadow-xl rounded-2xl p-8">
-//                             <h2 className="text-xl font-semibold text-gray-800 mb-2">Set a new password</h2>
-//                             <p className="text-sm text-gray-600 mb-4">Your token will be validated and the password updated.</p>
-
-//                             <form onSubmit={handleSubmit} className="space-y-4">
-//                                 <div>
-//                                     <label className="block text-sm font-medium text-gray-700 mb-1">New password</label>
-//                                     <div className="flex items-center bg-white/80 border border-gray-300 rounded-lg">
-//                                         <input
-//                                             type={showPassword ? "text" : "password"}
-//                                             required
-//                                             minLength={8}
-//                                             value={password}
-//                                             onChange={(e) => setPassword(e.target.value)}
-//                                             className="w-full p-3 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
-//                                             placeholder="Minimum 8 characters"
-//                                         />
-//                                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="px-3 text-gray-600 hover:text-gray-800 transition">
-//                                             <EyeIcon open={showPassword} />
-//                                         </button>
-//                                     </div>
-//                                 </div>
-
-//                                 <div>
-//                                     <label className="block text-sm font-medium text-gray-700 mb-1">Confirm new password</label>
-//                                     <div className="flex items-center bg-white/80 border border-gray-300 rounded-lg">
-//                                         <input
-//                                             type={showConfirm ? "text" : "password"}
-//                                             required
-//                                             minLength={8}
-//                                             value={passwordConfirm}
-//                                             onChange={(e) => setPasswordConfirm(e.target.value)}
-//                                             className="w-full p-3 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
-//                                             placeholder="Re-enter password"
-//                                         />
-//                                         <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="px-3 text-gray-600 hover:text-gray-800 transition">
-//                                             <EyeIcon open={showConfirm} />
-//                                         </button>
-//                                     </div>
-//                                 </div>
-
-//                                 {error && <p className="text-red-600 text-sm">{error}</p>}
-//                                 {message && <p className="text-green-700 text-sm">{message}</p>}
-
-//                                 <button type="submit" disabled={loading} className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold shadow hover:bg-blue-600 transition">
-//                                     {loading ? "Resetting..." : "Reset password"}
-//                                 </button>
-//                             </form>
-
-//                             <div className="mt-6 text-center text-sm text-gray-700">
-//                                 <Link to="/login" className="underline hover:text-gray-900">Back to login</Link>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// }
-
-
-// src/pages/ResetPassword.jsx
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import {
+  useParams,
+  Link,
+  useNavigate,
+} from "react-router-dom";
 import api from "../services/api";
 
 export default function ResetPassword() {
-  const { token } = useParams();
-  const navigate = useNavigate();
+  const { token } =
+    useParams();
 
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const navigate =
+    useNavigate();
 
-  const handleSubmit = async (e) => {
+  const [password, setPassword] =
+    useState("");
+
+  const [
+    passwordConfirm,
+    setPasswordConfirm,
+  ] = useState("");
+
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  const [
+    showConfirm,
+    setShowConfirm,
+  ] = useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
+
+  const [
+    touched,
+    setTouched,
+  ] = useState(false);
+
+  const minLength =
+    password.length >= 8;
+
+  const hasLetter =
+    /[A-Za-z]/.test(
+      password
+    );
+
+  const hasNumber =
+    /\d/.test(
+      password
+    );
+
+  const passwordsMatch =
+    password &&
+    passwordConfirm &&
+    password ===
+      passwordConfirm;
+
+  const validPassword =
+    minLength &&
+    hasLetter &&
+    hasNumber;
+
+  async function handleSubmit(
+    e
+  ) {
     e.preventDefault();
+
+    setTouched(
+      true
+    );
     setError("");
 
-    if (password !== passwordConfirm) {
-      setError("Passwords do not match.");
+    if (
+      !validPassword
+    ) {
+      setError(
+        "Password must be at least 8 characters and include letters and numbers."
+      );
       return;
     }
 
-    setLoading(true);
-    try {
-      await api.post("/accounts/reset-password/", {
-        token,
-        password,
-        password_confirm: passwordConfirm,
-      });
-
-      // Unified success handling
-      navigate("/action-result?type=reset-success");
-    } catch (err) {
-      setError(err?.response?.data?.error || "Invalid or expired token.");
-    } finally {
-      setLoading(false);
+    if (
+      !passwordsMatch
+    ) {
+      setError(
+        "Passwords do not match."
+      );
+      return;
     }
-  };
+
+    setLoading(
+      true
+    );
+
+    try {
+      await api.post(
+        "/accounts/reset-password/",
+        {
+          token,
+          password,
+          password_confirm:
+            passwordConfirm,
+        }
+      );
+
+      navigate(
+        "/action-result?type=reset-success"
+      );
+    } catch (err) {
+      setError(
+        err
+          ?.response
+          ?.data
+          ?.error ||
+          err
+            ?.response
+            ?.data
+            ?.message ||
+          "Invalid or expired reset link."
+      );
+    } finally {
+      setLoading(
+        false
+      );
+    }
+  }
 
   return (
-    <div className="min-vh-100 bg-white d-flex justify-content-center pt-5">
-      <div className="container pt-5">
-        <div className="row align-items-center justify-content-center">
+    <div
+      className="min-vh-100 d-flex"
+      style={{
+        background:
+          "linear-gradient(135deg,#f8fafc 0%,#eefbf5 42%,#ffffff 100%)",
+      }}
+    >
+      {/* LEFT PANEL */}
+      <div
+        className="d-none d-lg-flex flex-column justify-content-between p-5"
+        style={{
+          width: "48%",
+          background:
+            "linear-gradient(180deg,#0f172a 0%,#111827 48%,#052e2b 100%)",
+          position:
+            "relative",
+          overflow:
+            "hidden",
+        }}
+      >
+        <div style={glowTop} />
+        <div
+          style={
+            glowBottom
+          }
+        />
 
-          {/* LEFT INFO */}
-          <div className="col-lg-6 d-none d-lg-flex justify-content-center">
-            <div style={{ maxWidth: 360 }}>
-              <h3 className="fw-semibold mb-3">
-                Secure your account
-              </h3>
-              <p className="text-muted">
-                Create a new secure password. Passwords should be at least
-                8 characters.
-              </p>
-            </div>
+        {/* LOGO */}
+        <div className="d-flex align-items-center gap-3">
+          <div
+            style={
+              logoBox
+            }
+          >
+            <i className="bi bi-house-door-fill"></i>
           </div>
 
-          {/* RIGHT FORM */}
-          <div className="col-12 col-md-10 col-lg-6 col-xl-5">
-            <div className="card shadow-sm">
-              <div className="card-body p-4">
+          <div
+            style={{
+              color:
+                "#fff",
+              fontWeight: 800,
+              fontSize:
+                "1.25rem",
+            }}
+          >
+            Stay
+            <span
+              style={{
+                color:
+                  "#10b981",
+              }}
+            >
+              Nest
+            </span>
+          </div>
+        </div>
 
-                <h5 className="fw-semibold mb-1">
-                  Set a new password
-                </h5>
-                <p className="text-muted mb-4">
-                  Your token will be validated and the password updated.
-                </p>
+        {/* HERO */}
+        <div>
+          <div
+            style={{
+              display:
+                "inline-flex",
+              gap: 8,
+              alignItems:
+                "center",
+              padding:
+                "8px 12px",
+              borderRadius:
+                999,
+              background:
+                "rgba(255,255,255,.06)",
+              color:
+                "#cbd5e1",
+              fontSize:
+                ".8rem",
+              marginBottom:
+                20,
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius:
+                  "50%",
+                background:
+                  "#10b981",
+              }}
+            ></span>
+            Protected password update
+          </div>
 
-                <form onSubmit={handleSubmit}>
+          <h1
+            style={{
+              color:
+                "#fff",
+              fontWeight: 800,
+              fontSize:
+                "2.35rem",
+              lineHeight:
+                1.18,
+              marginBottom:
+                18,
+              maxWidth:
+                520,
+            }}
+          >
+            Create your new
+            password.
+          </h1>
 
-                  {/* NEW PASSWORD */}
-                  <div className="mb-3">
-                    <label className="form-label">
-                      New password
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        className="form-control"
-                        required
-                        minLength={8}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Minimum 8 characters"
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        <i
-                          className={`bi ${
-                            showPassword ? "bi-eye-slash" : "bi-eye"
-                          }`}
-                        ></i>
-                      </button>
-                    </div>
-                  </div>
+          <p
+            style={{
+              color:
+                "#94a3b8",
+              lineHeight:
+                1.8,
+              maxWidth:
+                520,
+              marginBottom:
+                30,
+            }}
+          >
+            Use a strong
+            password to keep
+            your StayNest
+            account secure
+            and protected.
+          </p>
 
-                  {/* CONFIRM PASSWORD */}
-                  <div className="mb-3">
-                    <label className="form-label">
-                      Confirm new password
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type={showConfirm ? "text" : "password"}
-                        className="form-control"
-                        required
-                        minLength={8}
-                        value={passwordConfirm}
-                        onChange={(e) =>
-                          setPasswordConfirm(e.target.value)
-                        }
-                        placeholder="Re-enter password"
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() => setShowConfirm(!showConfirm)}
-                      >
-                        <i
-                          className={`bi ${
-                            showConfirm ? "bi-eye-slash" : "bi-eye"
-                          }`}
-                        ></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  {error && (
-                    <div className="alert alert-danger py-2">
-                      {error}
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn btn-primary w-100"
-                  >
-                    {loading ? "Resetting..." : "Reset password"}
-                  </button>
-                </form>
-
-                <div className="text-center mt-4 small">
-                  <Link to="/login" className="text-decoration-underline">
-                    Back to login
-                  </Link>
+          {[
+            [
+              "bi-key",
+              "Minimum 8 characters",
+            ],
+            [
+              "bi-shield-check",
+              "Letters + numbers recommended",
+            ],
+            [
+              "bi-arrow-repeat",
+              "Old password becomes invalid",
+            ],
+            [
+              "bi-lock",
+              "Secure token verification",
+            ],
+          ].map(
+            ([icon, text]) => (
+              <div
+                key={text}
+                className="d-flex align-items-center gap-3 mb-3"
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius:
+                      10,
+                    background:
+                      "rgba(16,185,129,.12)",
+                    display:
+                      "grid",
+                    placeItems:
+                      "center",
+                    color:
+                      "#10b981",
+                  }}
+                >
+                  <i
+                    className={`bi ${icon}`}
+                  ></i>
                 </div>
 
+                <span
+                  style={{
+                    color:
+                      "#e2e8f0",
+                    fontSize:
+                      ".94rem",
+                  }}
+                >
+                  {text}
+                </span>
               </div>
+            )
+          )}
+        </div>
+
+        <div
+          style={{
+            color:
+              "#64748b",
+            fontSize:
+              ".82rem",
+          }}
+        >
+          ©{" "}
+          {new Date().getFullYear()}{" "}
+          StayNest
+        </div>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div className="flex-grow-1 d-flex align-items-center justify-content-center p-4 p-lg-5">
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 520,
+            background:
+              "rgba(255,255,255,.94)",
+            backdropFilter:
+              "blur(16px)",
+            border:
+              "1px solid rgba(255,255,255,.85)",
+            borderRadius:
+              24,
+            padding: 34,
+            boxShadow:
+              "0 24px 60px rgba(15,23,42,.08)",
+          }}
+        >
+          {/* MOBILE LOGO */}
+          <div className="d-flex d-lg-none align-items-center gap-2 mb-4">
+            <div
+              style={{
+                ...logoBox,
+                width: 36,
+                height: 36,
+                borderRadius:
+                  10,
+                fontSize: 16,
+              }}
+            >
+              <i className="bi bi-house-door-fill"></i>
             </div>
+
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize:
+                  "1.1rem",
+              }}
+            >
+              Stay
+              <span
+                style={{
+                  color:
+                    "#10b981",
+                }}
+              >
+                Nest
+              </span>
+            </span>
           </div>
 
+          {/* HEADER */}
+          <div className="text-center mb-4">
+            <div
+              style={{
+                width: 74,
+                height: 74,
+                borderRadius:
+                  "50%",
+                background:
+                  "rgba(16,185,129,.10)",
+                display:
+                  "grid",
+                placeItems:
+                  "center",
+                margin:
+                  "0 auto 18px",
+                color:
+                  "#10b981",
+                fontSize: 30,
+              }}
+            >
+              <i className="bi bi-key-fill"></i>
+            </div>
+
+            <h2
+              style={{
+                fontWeight: 800,
+                fontSize:
+                  "1.85rem",
+                color:
+                  "#0f172a",
+                marginBottom: 8,
+              }}
+            >
+              New Password
+            </h2>
+
+            <p
+              style={{
+                color:
+                  "#64748b",
+                lineHeight:
+                  1.7,
+                margin: 0,
+              }}
+            >
+              Enter and
+              confirm your
+              new password.
+            </p>
+          </div>
+
+          {/* FORM */}
+          <form
+            onSubmit={
+              handleSubmit
+            }
+          >
+            {/* PASSWORD */}
+            <label
+              style={
+                labelStyle
+              }
+            >
+              New Password
+            </label>
+
+            <div
+              style={{
+                ...inputWrap,
+                marginTop: 8,
+              }}
+            >
+              <i className="bi bi-lock text-muted"></i>
+
+              <input
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+                value={
+                  password
+                }
+                disabled={
+                  loading
+                }
+                onBlur={() =>
+                  setTouched(
+                    true
+                  )
+                }
+                onChange={(
+                  e
+                ) =>
+                  setPassword(
+                    e
+                      .target
+                      .value
+                  )
+                }
+                placeholder="Minimum 8 characters"
+                className="form-control border-0"
+                style={
+                  cleanInput
+                }
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowPassword(
+                    !showPassword
+                  )
+                }
+                style={
+                  eyeBtn
+                }
+              >
+                <i
+                  className={`bi ${
+                    showPassword
+                      ? "bi-eye-slash"
+                      : "bi-eye"
+                  }`}
+                ></i>
+              </button>
+            </div>
+
+            {/* CHECKLIST */}
+            <div
+              style={{
+                marginTop: 12,
+                marginBottom:
+                  18,
+              }}
+            >
+              {[
+                [
+                  minLength,
+                  "At least 8 characters",
+                ],
+                [
+                  hasLetter,
+                  "Contains letters",
+                ],
+                [
+                  hasNumber,
+                  "Contains numbers",
+                ],
+              ].map(
+                ([ok, txt]) => (
+                  <div
+                    key={txt}
+                    style={{
+                      fontSize:
+                        ".84rem",
+                      color:
+                        ok
+                          ? "#059669"
+                          : "#94a3b8",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <i
+                      className={`bi ${
+                        ok
+                          ? "bi-check-circle-fill"
+                          : "bi-circle"
+                      } me-2`}
+                    ></i>
+                    {txt}
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* CONFIRM */}
+            <label
+              style={
+                labelStyle
+              }
+            >
+              Confirm Password
+            </label>
+
+            <div
+              style={{
+                ...inputWrap,
+                marginTop: 8,
+              }}
+            >
+              <i className="bi bi-shield-lock text-muted"></i>
+
+              <input
+                type={
+                  showConfirm
+                    ? "text"
+                    : "password"
+                }
+                value={
+                  passwordConfirm
+                }
+                disabled={
+                  loading
+                }
+                onChange={(
+                  e
+                ) =>
+                  setPasswordConfirm(
+                    e
+                      .target
+                      .value
+                  )
+                }
+                placeholder="Re-enter password"
+                className="form-control border-0"
+                style={
+                  cleanInput
+                }
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowConfirm(
+                    !showConfirm
+                  )
+                }
+                style={
+                  eyeBtn
+                }
+              >
+                <i
+                  className={`bi ${
+                    showConfirm
+                      ? "bi-eye-slash"
+                      : "bi-eye"
+                  }`}
+                ></i>
+              </button>
+            </div>
+
+            {passwordConfirm && (
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize:
+                    ".84rem",
+                  color:
+                    passwordsMatch
+                      ? "#059669"
+                      : "#dc2626",
+                }}
+              >
+                <i
+                  className={`bi ${
+                    passwordsMatch
+                      ? "bi-check-circle-fill"
+                      : "bi-x-circle-fill"
+                  } me-2`}
+                ></i>
+                {passwordsMatch
+                  ? "Passwords match"
+                  : "Passwords do not match"}
+              </div>
+            )}
+
+            {/* ERROR */}
+            {error && (
+              <div
+                style={{
+                  marginTop: 16,
+                  background:
+                    "#fef2f2",
+                  border:
+                    "1px solid #fecaca",
+                  borderRadius:
+                    14,
+                  padding:
+                    "12px 14px",
+                  color:
+                    "#dc2626",
+                  fontSize:
+                    ".88rem",
+                }}
+              >
+                <i className="bi bi-exclamation-circle me-2"></i>
+                {error}
+              </div>
+            )}
+
+            {/* SUBMIT */}
+            <button
+              type="submit"
+              disabled={
+                loading
+              }
+              className="btn w-100 mt-4"
+              style={{
+                ...primaryBtn,
+                opacity:
+                  loading
+                    ? 0.8
+                    : 1,
+              }}
+            >
+              {loading ? (
+                <span className="d-flex align-items-center justify-content-center gap-2">
+                  <span className="spinner-border spinner-border-sm"></span>
+                  Resetting...
+                </span>
+              ) : (
+                <>
+                  <i className="bi bi-check2-circle me-2"></i>
+                  Reset Password
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* FOOTER */}
+          <div className="text-center mt-4">
+            <Link
+              to="/login"
+              style={{
+                textDecoration:
+                  "none",
+                color:
+                  "#64748b",
+                fontWeight: 600,
+                fontSize:
+                  ".92rem",
+              }}
+            >
+              ← Back to Login
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+/* helpers */
+
+const glowTop = {
+  position: "absolute",
+  top: -80,
+  right: -80,
+  width: 280,
+  height: 280,
+  borderRadius: "50%",
+  background:
+    "rgba(16,185,129,.12)",
+};
+
+const glowBottom = {
+  position: "absolute",
+  bottom: -100,
+  left: -100,
+  width: 320,
+  height: 320,
+  borderRadius: "50%",
+  background:
+    "rgba(16,185,129,.08)",
+};
+
+const logoBox = {
+  width: 42,
+  height: 42,
+  borderRadius: 12,
+  background:
+    "linear-gradient(135deg,#10b981,#059669)",
+  display: "grid",
+  placeItems: "center",
+  color: "#fff",
+  fontSize: 20,
+  boxShadow:
+    "0 14px 28px rgba(16,185,129,.28)",
+};
+
+const labelStyle = {
+  fontSize: ".88rem",
+  fontWeight: 700,
+  color: "#374151",
+  display: "block",
+};
+
+const inputWrap = {
+  height: 50,
+  border:
+    "1px solid #dbe3ea",
+  borderRadius: 14,
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding:
+    "0 14px",
+  background: "#fff",
+};
+
+const cleanInput = {
+  height: "100%",
+  boxShadow: "none",
+  padding: 0,
+  background:
+    "transparent",
+};
+
+const eyeBtn = {
+  border: "none",
+  background:
+    "transparent",
+  color: "#94a3b8",
+};
+
+const primaryBtn = {
+  height: 50,
+  border: "none",
+  borderRadius: 14,
+  fontWeight: 700,
+  color: "#fff",
+  background:
+    "linear-gradient(135deg,#10b981,#059669)",
+  boxShadow:
+    "0 14px 34px rgba(16,185,129,.22)",
+};

@@ -7,7 +7,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Property, PropertyAuditLog, PropertyImage
+from .models import Property, PropertyAuditLog, PropertyImage, SharingOption
 from .serializers import PropertySerializer
 from django.shortcuts import get_object_or_404
 from .serializers import PropertyImageUploadSerializer
@@ -61,6 +61,7 @@ class OwnerPropertyViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def toggle(self, request, pk=None):
         prop = self.get_object()
+        was_approved = prop.status == "APPROVED"
         if prop.status == "APPROVED":
             prop.status = "ACTIVE"
         elif prop.status == "ACTIVE":
@@ -70,6 +71,24 @@ class OwnerPropertyViewSet(viewsets.ModelViewSet):
         else:
             return Response({"error": "Not allowed"}, status=400)
         prop.save()
+
+        if was_approved and prop.status == "ACTIVE":
+            try:
+                from bookings.models import Notification
+                from bookings.ledger_utils import _notify
+                _notify(
+                    recipient=prop.owner,
+                    notif_type=Notification.NotifType.PROPERTY_ACTIVE,
+                    title=f"{prop.property_name} is now live!",
+                    message=(
+                        f"Your property '{prop.property_name}' is now active on StayNest. "
+                        "Users can find and book it from Browse Stays."
+                    ),
+                    property_id_ref=prop.id,
+                )
+            except Exception:
+                pass
+
         return Response({"status": prop.status})
 
     @action(detail=True, methods=["post"])
@@ -161,6 +180,21 @@ class AdminPropertyReviewViewSet(viewsets.ReadOnlyModelViewSet):
         prop.status = "APPROVED"
         prop.rejection_reason = ""
         prop.save()
+        try:
+            from bookings.models import Notification
+            from bookings.ledger_utils import _notify
+            _notify(
+                recipient=prop.owner,
+                notif_type=Notification.NotifType.PROPERTY_APPROVED,
+                title="Property approved!",
+                message=(
+                    f"Your property '{prop.property_name}' has been approved by StayNest. "
+                    "Go to your properties and activate it to make it live on Browse Stays."
+                ),
+                property_id_ref=prop.id,
+            )
+        except Exception:
+            pass
         return Response({"status": "APPROVED"})
 
     @action(detail=True, methods=["post"])
@@ -172,6 +206,21 @@ class AdminPropertyReviewViewSet(viewsets.ReadOnlyModelViewSet):
         prop.status = "REJECTED"
         prop.rejection_reason = reason
         prop.save()
+        try:
+            from bookings.models import Notification
+            from bookings.ledger_utils import _notify
+            _notify(
+                recipient=prop.owner,
+                notif_type=Notification.NotifType.PROPERTY_REJECTED,
+                title="Property not approved",
+                message=(
+                    f"Your property '{prop.property_name}' was not approved. "
+                    f"Reason: {reason}. Please update your listing and resubmit."
+                ),
+                property_id_ref=prop.id,
+            )
+        except Exception:
+            pass
         return Response({"status": "REJECTED"})
 
 # Owner APIs
@@ -184,7 +233,7 @@ from .serializers import PropertyLocationSerializer
 class OwnerPropertyLocationView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, pk):
+    def patch(self, request, pk):
         prop = get_object_or_404(
             Property,
             pk=pk,
@@ -197,6 +246,7 @@ class OwnerPropertyLocationView(APIView):
             data=request.data,
             partial=True
         )
+
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -231,7 +281,10 @@ class PropertyNearbyView(ListAPIView):
         radius = float(self.request.query_params.get("radius", 3))
 
         results = []
-        for prop in Property.objects.all():
+        for prop in Property.objects.filter(
+            status="ACTIVE", is_deleted=False,
+            latitude__isnull=False, longitude__isnull=False
+            ):
             dist = haversine_distance(
                 lat, lng, prop.latitude, prop.longitude
             )
@@ -246,3 +299,122 @@ class PropertyLocationDetailView(RetrieveAPIView):
     permission_classes = [AllowAny]
     serializer_class = PropertyLocationSerializer
     queryset = Property.objects.all()
+
+
+
+# ===============================
+# PUBLIC PROPERTY VIEWS
+# ===============================
+
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.permissions import AllowAny
+from .models import Property
+from .serializers import PropertySerializer
+from django.db import models
+
+
+from django.db.models import Q
+
+class PublicPropertyListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PropertySerializer
+
+    def get_queryset(self):
+        qs = Property.objects.filter(status="ACTIVE", is_deleted=False)
+
+        p = self.request.query_params
+
+        search = p.get("search")
+        if search:
+            qs = qs.filter(
+                models.Q(property_name__icontains=search) |
+                models.Q(city__icontains=search) |
+                models.Q(area__icontains=search)
+            )
+
+        city = p.get("city")
+        if city:
+            qs = qs.filter(city__iexact=city)
+
+        area = p.get("area")
+        if area:
+            qs = qs.filter(area__icontains=area)
+
+        stay_type = p.get("stay_type")
+        if stay_type:
+            qs = qs.filter(stay_type=stay_type)
+
+        preferred = p.get("preferred_occupants")
+        if preferred:
+            qs = qs.filter(preferred_occupants__contains=preferred)
+
+        is_ac = p.get("is_ac")
+        if is_ac is not None:
+            qs = qs.filter(is_ac=is_ac == "true")
+
+        food = p.get("food_provided")
+        if food is not None:
+            qs = qs.filter(food_provided=food == "true")
+
+        parking = p.get("parking_available")
+        if parking is not None:
+            qs = qs.filter(parking_available=parking == "true")
+
+        wifi = p.get("wifi_available")
+        if wifi is not None:
+            qs = qs.filter(wifi_available=wifi == "true")
+
+        power = p.get("power_backup")
+        if power is not None:
+            qs = qs.filter(power_backup=power == "true")
+
+        has_deposit = p.get("has_deposit")
+        if has_deposit == "true":
+            qs = qs.filter(security_deposit__isnull=False, security_deposit__gt=0)
+
+        sharing_type = p.get("sharing_type")
+        min_rent = p.get("min_rent")
+        max_rent = p.get("max_rent")
+
+        if sharing_type or min_rent or max_rent:
+            sharing_qs = SharingOption.objects.all()
+            if sharing_type:
+                sharing_qs = sharing_qs.filter(sharing_type=int(sharing_type))
+            if min_rent:
+                sharing_qs = sharing_qs.filter(rent_amount__gte=min_rent)
+            if max_rent:
+                sharing_qs = sharing_qs.filter(rent_amount__lte=max_rent)
+            property_ids = sharing_qs.values_list("property_id", flat=True)
+            qs = qs.filter(id__in=property_ids)
+
+        lat = p.get("lat")
+        lng = p.get("lng")
+        radius = float(p.get("radius", 5))
+
+        if lat and lng:
+            from .utils.location import haversine_distance
+            lat_f, lng_f = float(lat), float(lng)
+            ids = [
+                prop.id for prop in qs
+                if prop.latitude and prop.longitude and
+                haversine_distance(lat_f, lng_f, float(prop.latitude), float(prop.longitude)) <= radius
+            ]
+            qs = qs.filter(id__in=ids)
+
+        return qs.order_by("-created_at")
+
+
+class PublicPropertyDetailView(RetrieveAPIView):
+    """
+    Public:
+    - View single ACTIVE property
+    - No authentication required
+    """
+    permission_classes = [AllowAny]
+    serializer_class = PropertySerializer
+
+    def get_queryset(self):
+        return Property.objects.filter(
+            status="ACTIVE",
+            is_deleted=False
+        )

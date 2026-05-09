@@ -1,0 +1,126 @@
+/* ===============================
+   GLOBAL UTILITIES
+================================= */
+
+/* Layout */
+.sn-container {
+  width: 100%;
+  max-width: var(--sn-container);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 768px) {
+  .sn-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .sn-container {
+    padding-inline: 2rem;
+  }
+}
+
+/* Section spacing */
+.sn-section {
+  padding-block: 4rem;
+}
+
+@media (min-width: 992px) {
+  .sn-section {
+    padding-block: 5.5rem;
+  }
+}
+
+/* Text */
+.sn-text-soft {
+  color: var(--sn-text-soft);
+}
+
+.sn-muted {
+  color: var(--sn-muted);
+}
+
+.sn-title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.sn-subtitle {
+  color: var(--sn-text-soft);
+  line-height: 1.7;
+}
+
+/* Backgrounds */
+.sn-bg {
+  background: var(--sn-bg);
+}
+
+.sn-surface {
+  background: var(--sn-card);
+}
+
+.sn-dark {
+  background: var(--sn-dark);
+  color: #fff;
+}
+
+/* Borders */
+.sn-border {
+  border: 1px solid var(--sn-border);
+}
+
+/* Radius */
+.sn-rounded {
+  border-radius: var(--sn-radius-md);
+}
+
+.sn-rounded-lg {
+  border-radius: var(--sn-radius-lg);
+}
+
+/* Shadows */
+.sn-shadow-sm {
+  box-shadow: var(--sn-shadow-sm);
+}
+
+.sn-shadow-md {
+  box-shadow: var(--sn-shadow-md);
+}
+
+.sn-shadow-lg {
+  box-shadow: var(--sn-shadow-lg);
+}
+
+/* Flex helpers */
+.sn-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sn-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Glass */
+.sn-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

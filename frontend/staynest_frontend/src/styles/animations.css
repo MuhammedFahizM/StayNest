@@ -1,0 +1,115 @@
+/* ===============================
+   PREMIUM MOTION SYSTEM
+================================= */
+
+/* Page Enter */
+@keyframes sn-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.992);
+    filter: blur(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Reveal Up */
+@keyframes sn-reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade */
+@keyframes sn-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Float */
+@keyframes sn-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Pulse Soft */
+@keyframes sn-pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.72;
+  }
+}
+
+/* Shimmer */
+@keyframes sn-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Classes */
+.sn-page-enter {
+  animation: sn-page-enter 0.65s var(--sn-ease);
+}
+
+.sn-reveal {
+  opacity: 0;
+  animation: sn-reveal-up 0.7s var(--sn-ease) forwards;
+}
+
+.sn-fade {
+  animation: sn-fade 0.45s ease forwards;
+}
+
+.sn-float {
+  animation: sn-float 4s ease-in-out infinite;
+}
+
+.sn-pulse {
+  animation: sn-pulse-soft 1.8s ease infinite;
+}
+
+/* Stagger helpers */
+.sn-delay-1 { animation-delay: 0.08s; }
+.sn-delay-2 { animation-delay: 0.16s; }
+.sn-delay-3 { animation-delay: 0.24s; }
+.sn-delay-4 { animation-delay: 0.32s; }
+.sn-delay-5 { animation-delay: 0.40s; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

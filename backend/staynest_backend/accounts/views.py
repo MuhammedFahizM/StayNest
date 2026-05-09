@@ -5,6 +5,7 @@ from rest_framework import status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import PermissionDenied
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -26,6 +27,15 @@ from accounts.tasks import (
     send_verification_email,
     send_password_reset_email,
 )
+
+from bookings.models import Booking
+from accounts.models import Profile, Owner
+from accounts.serializers import (
+    UserProfileReadSerializer,
+    OwnerProfileReadSerializer,
+    OwnerPublicProfileSerializer
+)
+
 
 User = get_user_model()
 
@@ -71,18 +81,30 @@ class LoginView(APIView):
         else:
             role = user.profile.role
 
+        # Get phone from owner or profile
+        phone = ""
+        if hasattr(user, "owner"):
+            phone = user.owner.phone or ""
+        elif hasattr(user, "profile"):
+            phone = user.profile.phone or ""
+
+        profile_image = None
+
+        if hasattr(user, "owner") and user.owner.profile_photo:
+            profile_image = request.build_absolute_uri(user.owner.profile_photo.url)
+
+        elif hasattr(user, "profile") and user.profile.profile_photo:
+            profile_image = request.build_absolute_uri(user.profile.profile_photo.url)
+
         return Response(
             {
                 "message": "Login success",
                 "full_name": user.first_name,
                 "email": user.email,
                 "role": role,
+                "phone": phone,
 
-                "profile_image": (
-                    request.build_absolute_uri(user.owner.profile_photo.url)
-                    if hasattr(user, "owner") and user.owner.profile_photo
-                    else None
-                ),
+                "profile_image": profile_image,
 
                 "access_token": str(refresh.access_token),
                 "refresh_token": str(refresh),
@@ -320,3 +342,101 @@ class AdminOwnerProfileListView(ListAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = OwnerProfileReadSerializer
     queryset = Owner.objects.select_related("user", "user__profile")
+
+
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.permissions import IsAuthenticated
+from .models import Profile
+from .serializers import (
+    UserProfileReadSerializer,
+    UserProfileUpdateSerializer
+)
+from .permissions import IsUserSelf
+
+
+class UserProfileView(RetrieveUpdateAPIView):
+    """
+    User Profile:
+    - READ own profile
+    - UPDATE allowed fields only
+    - DELETE NOT ALLOWED
+    """
+    permission_classes = [IsAuthenticated, IsUserSelf]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return Profile.objects.select_related("user")
+
+    def get_object(self):
+        return Profile.objects.get(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return UserProfileUpdateSerializer
+        return UserProfileReadSerializer
+
+
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+
+
+class PublicUserProfileView(RetrieveAPIView):
+    """
+    Owner can view User profile only if booking relationship
+    exists in allowed states.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserProfileReadSerializer
+
+    def get_object(self):
+        target_user_id = self.kwargs["user_id"]
+
+        # Must be owner
+        if not hasattr(self.request.user, "profile") or \
+           self.request.user.profile.role != "owner":
+            raise PermissionDenied("Only owners can access this endpoint.")
+
+        relationship_exists = Booking.objects.filter(
+            property__owner=self.request.user,
+            user_id=target_user_id,
+            status__in=Booking.PROFILE_ACCESS_STATES
+        ).exists()
+
+        if not relationship_exists:
+            raise PermissionDenied(
+                "Profile access not allowed in current booking state."
+            )
+
+        return get_object_or_404(Profile, user_id=target_user_id)
+
+
+
+class PublicOwnerProfileView(RetrieveAPIView):
+    """
+    User can view Owner profile only if booking relationship
+    exists in allowed states.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = OwnerPublicProfileSerializer
+
+    def get_object(self):
+        target_owner_id = self.kwargs["owner_id"]
+
+        # Must be normal user
+        if not hasattr(self.request.user, "profile") or \
+           self.request.user.profile.role != "user":
+            raise PermissionDenied("Only users can access this endpoint.")
+
+        relationship_exists = Booking.objects.filter(
+            user=self.request.user,
+            property__owner_id=target_owner_id,
+            status__in=Booking.PROFILE_ACCESS_STATES
+        ).exists()
+
+        if not relationship_exists:
+            raise PermissionDenied(
+                "Profile access not allowed in current booking state."
+            )
+
+        return get_object_or_404(Owner, user_id=target_owner_id)

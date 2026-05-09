@@ -8,6 +8,8 @@ from .views import (
     PropertyByCityView,
     PropertyNearbyView,
     PropertyLocationDetailView,
+    PublicPropertyListView,
+    PublicPropertyDetailView,
 )
 
 router = DefaultRouter()
@@ -21,4 +23,11 @@ urlpatterns = router.urls + [
     path("properties/by-city/", PropertyByCityView.as_view()),
     path("properties/nearby/", PropertyNearbyView.as_view()),
     path("properties/location/<int:pk>/", PropertyLocationDetailView.as_view()),
+
+
+     # ===============================
+    # PUBLIC PROPERTY APIs
+    # ===============================
+    path("properties/", PublicPropertyListView.as_view(), name="public-property-list"),
+    path("properties/<int:pk>/", PublicPropertyDetailView.as_view(), name="public-property-detail"),
 ]

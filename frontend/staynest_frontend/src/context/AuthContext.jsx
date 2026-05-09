@@ -33,7 +33,8 @@ export default function AuthProvider({ children }) {
       full_name: data.full_name,
       email: data.email,
       role: data.role,
-      profile_image: data.profile_image || null, // ✅ IMPORTANT
+      profile_image: data.profile_image || null,
+      phone: data.phone || "",
     };
 
     setUser(newUser);

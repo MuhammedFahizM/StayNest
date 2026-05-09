@@ -1,324 +1,522 @@
-// import { Link, useNavigate } from "react-router-dom";
-// import { useContext, useState, useRef, useEffect } from "react";
-// import { AuthContext } from "../context/AuthContext";
-
-// export default function Navbar() {
-//   const { user, logout } = useContext(AuthContext);
-//   const navigate = useNavigate();
-
-//   const [open, setOpen] = useState(false);
-//   const dropdownRef = useRef(null);
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate("/login");
-//   };
-
-//   // Close dropdown on outside click
-//   useEffect(() => {
-//     function handleClickOutside(e) {
-//       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-//         setOpen(false);
-//       }
-//     }
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, []);
-
-//   return (
-//     <nav
-//       className="
-//         fixed top-0 left-0 z-50 w-full
-//         backdrop-blur-lg bg-white/30
-//         border-b border-white/40
-//         px-8 py-3
-//         shadow-sm
-//         flex items-center justify-between
-//       "
-//     >
-//       {/* LEFT NAV */}
-//       <div className="flex items-center gap-6 font-medium text-gray-800">
-//         <Link to="/" className="hover:text-blue-600 transition">
-//           Home
-//         </Link>
-
-//         <Link to="/properties" className="hover:text-blue-600 transition">
-//           Properties
-//         </Link>
-
-//         {user && (
-//           <Link to="/chat" className="hover:text-blue-600 transition">
-//             Chat
-//           </Link>
-//         )}
-
-//         {user?.role === "owner" && (
-//           <Link
-//             to="/owner/dashboard"
-//             className="hover:text-blue-600 transition"
-//           >
-//             Owner Dashboard
-//           </Link>
-//         )}
-//       </div>
-
-//       {/* RIGHT SIDE */}
-//       <div className="flex items-center gap-4">
-//         {!user && (
-//           <>
-//             <Link
-//               to="/login"
-//               className="px-4 py-2 rounded-lg hover:text-blue-600 transition"
-//             >
-//               Login
-//             </Link>
-
-//             <Link
-//               to="/register"
-//               className="
-//                 px-4 py-2 rounded-lg
-//                 bg-blue-500 text-white
-//                 shadow hover:bg-blue-600 transition
-//               "
-//             >
-//               Register
-//             </Link>
-//           </>
-//         )}
-
-//         {user && (
-//           <div className="relative" ref={dropdownRef}>
-//             {/* Avatar + Name */}
-//             <button
-//               onClick={() => setOpen(!open)}
-//               className="flex flex-col items-center gap-1 focus:outline-none"
-//             >
-//               <div
-//                 className="
-//                   w-10 h-10 rounded-full
-//                   bg-blue-500 text-white
-//                   flex items-center justify-center
-//                   font-semibold
-//                   overflow-hidden
-//                   hover:ring-2 hover:ring-blue-400 transition
-//                 "
-//               >
-//                 {user.profile_image ? (
-//                   <img
-//                     src={user.profile_image}
-//                     alt="Profile"
-//                     className="w-full h-full object-cover"
-//                   />
-//                 ) : (
-//                   user.full_name?.charAt(0)?.toUpperCase() || "U"
-//                 )}
-//               </div>
-
-//              <span className="
-//   text-sm font-semibold tracking-wide
-//   bg-gradient-to-r from-rose-600 via-red-500 to-rose-700
-//   bg-clip-text text-transparent
-//   drop-shadow-[0_0_2px_rgba(244,63,94,0.35)]
-//   leading-none
-// ">
-//   {user.full_name?.split(" ")[0]}
-// </span>
-
-//             </button>
-
-//             {/* Dropdown */}
-//             {open && (
-//               <div
-//                 className="
-//                   absolute right-0 mt-2 w-48
-//                   bg-white/90 backdrop-blur-lg
-//                   border border-white/70
-//                   rounded-xl shadow-lg
-//                   overflow-hidden
-//                 "
-//               >
-//                 <button
-//                   onClick={() => {
-//                     navigate("/owner/profile");
-//                     setOpen(false);
-//                   }}
-//                   className="
-//                     block w-full text-left
-//                     px-4 py-2 text-sm text-gray-700
-//                     hover:bg-blue-50
-//                   "
-//                 >
-//                   Profile
-//                 </button>
-
-//                 <button
-//                   onClick={() => {
-//                     navigate("/owner/profile/edit");
-//                     setOpen(false);
-//                   }}
-//                   className="
-//                     block w-full text-left
-//                     px-4 py-2 text-sm text-gray-700
-//                     hover:bg-blue-50
-//                   "
-//                 >
-//                   Edit Profile
-//                 </button>
-
-//                 <div className="border-t my-1" />
-
-//                 <button
-//                   onClick={handleLogout}
-//                   className="
-//                     block w-full text-left
-//                     px-4 py-2 text-sm text-red-600
-//                     hover:bg-red-50
-//                   "
-//                 >
-//                   Logout
-//                 </button>
-//               </div>
-//             )}
-//           </div>
-//         )}
-//       </div>
-//     </nav>
-//   );
-// }
-
-import { Link, useNavigate } from "react-router-dom";
-import { useContext, useState, useRef, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
+import NotificationBell from "../pages/NotificationBell";
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll);
+    return () =>
+      window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
+  const isActive = (path) =>
+    location.pathname === path;
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const navItems = [
+    { to: "/", label: "Home", icon: "bi-house-door" },
+    {
+      to: "/browse-stays",
+      label: "Browse",
+      icon: "bi-search",
+    },
+    ...(user?.role === "owner"
+      ? [
+          {
+            to: "/owner/dashboard",
+            label: "Dashboard",
+            icon: "bi-grid",
+          },
+        ]
+      : []),
+    ...(user?.role === "user"
+      ? [
+          {
+            to: "/user/dashboard",
+            label: "Dashboard",
+            icon: "bi-grid",
+          },
+        ]
+      : []),
+  ];
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-black fixed-top shadow-sm py-3">
-      <div className="container-fluid px-5">
-        {/* LEFT NAV */}
-        <div className="navbar-nav gap-3">
-          <Link to="/" className="nav-link">
-            Home
-          </Link>
+    <nav
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "var(--sn-navbar-height)",
+        zIndex: "var(--sn-z-nav)",
+        background: scrolled
+          ? "rgba(255,255,255,.78)"
+          : "rgba(255,255,255,.94)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+        borderBottom: scrolled
+          ? "1px solid var(--sn-border)"
+          : "1px solid transparent",
+        boxShadow: scrolled
+          ? "0 10px 28px rgba(0,0,0,.05)"
+          : "none",
+        transition: "all .28s var(--sn-ease)",
+      }}
+    >
+      <div className="sn-container h-100">
+        <div
+          style={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 18,
+          }}
+        >
+          {/* Brand */}
+          <Link
+            to="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            <motion.div
+              whileHover={{
+                rotate: -4,
+                scale: 1.05,
+              }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 12,
+                background:
+                  "linear-gradient(135deg,#10b981,#059669)",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 16,
+                boxShadow:
+                  "0 12px 28px rgba(16,185,129,.22)",
+              }}
+            >
+              🏠
+            </motion.div>
 
-          <Link to="/properties" className="nav-link">
-            Properties
-          </Link>
-
-          {user && (
-            <Link to="/chat" className="nav-link">
-              Chat
-            </Link>
-          )}
-
-          {user?.role === "owner" && (
-            <Link to="/owner/dashboard" className="nav-link">
-              Owner Dashboard
-            </Link>
-          )}
-        </div>
-
-        {/* RIGHT SIDE */}
-        <div className="d-flex align-items-center gap-3">
-          {!user && (
-            <>
-              <Link to="/login" className="btn btn-outline-light">
-                Login
-              </Link>
-
-              <Link to="/register" className="btn btn-primary">
-                Register
-              </Link>
-            </>
-          )}
-
-          {user && (
-            <div className="dropdown">
-              <button
-                className="btn btn-dark dropdown-toggle d-flex align-items-center gap-2"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize: "1.05rem",
+                color: "var(--sn-dark)",
+              }}
+            >
+              Stay
+              <span
+                style={{
+                  color: "var(--sn-primary)",
+                }}
               >
-                {/* Avatar */}
-                <div
-                  className="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center"
-                  style={{ width: 32, height: 32, fontSize: "0.9rem" }}
+                Nest
+              </span>
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="d-none d-lg-flex align-items-center gap-1">
+            {navItems.map((item) => (
+              <NavItem
+                key={item.to}
+                item={item}
+                active={isActive(item.to)}
+              />
+            ))}
+          </div>
+
+          {/* Right */}
+          <div className="d-flex align-items-center gap-3">
+            {!user ? (
+              <>
+                <Link
+                  to="/login"
+                  className="btn btn-outline-primary d-none d-sm-inline-flex"
                 >
-                  {user.profile_image ? (
-                    <img
-                      src={user.profile_image}
-                      alt="Profile"
-                      className="w-100 h-100 rounded-circle object-fit-cover"
+                  Login
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="btn btn-primary"
+                >
+                  Get Started
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* Bell */}
+  <NotificationBell />
+
+
+                {/* User */}
+                <div className="dropdown">
+                  <button
+  className="dropdown-toggle no-caret"
+  data-bs-toggle="dropdown"
+                    style={{
+                      border:
+                        "1px solid var(--sn-border)",
+                      background:
+                        "linear-gradient(180deg,#ffffff,#f8fafc)",
+                      borderRadius: 999,
+                      padding:
+                        "4px 12px 4px 4px",
+
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+
+                      minHeight: 44,
+                      boxShadow:
+                        "var(--sn-shadow-sm)",
+
+                      transition:
+                        "all .22s ease",
+                    }}
+                  >
+                    <Avatar user={user} />
+
+                    <span
+                      className="d-none d-sm-inline"
+                      style={{
+                        fontWeight: 800,
+                        fontSize: ".9rem",
+                        color:
+                          "var(--sn-text)",
+                        maxWidth: 96,
+                        whiteSpace:
+                          "nowrap",
+                        overflow:
+                          "hidden",
+                        textOverflow:
+                          "ellipsis",
+                      }}
+                    >
+                      {user.full_name?.split(
+                        " "
+                      )[0]}
+                    </span>
+
+                    <i className="bi bi-chevron-down small text-muted" />
+                  </button>
+
+                  <ul
+                    className="dropdown-menu dropdown-menu-end"
+                    style={{
+                      width: 255,
+                      marginTop: 12,
+                      padding: 8,
+                    }}
+                  >
+                    {/* Header */}
+                    <li
+                      style={{
+                        padding:
+                          "10px 12px 12px",
+                      }}
+                    >
+                      <div className="d-flex align-items-center gap-3">
+                        <Avatar user={user} />
+
+                        <div
+                          style={{
+                            minWidth: 0,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              fontSize:
+                                ".9rem",
+                            }}
+                          >
+                            {user.full_name}
+                          </div>
+
+                          <div
+                            style={{
+                              fontSize:
+                                ".78rem",
+                              color:
+                                "var(--sn-text-soft)",
+                              whiteSpace:
+                                "nowrap",
+                              overflow:
+                                "hidden",
+                              textOverflow:
+                                "ellipsis",
+                            }}
+                          >
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li>
+                      <hr className="dropdown-divider" />
+                    </li>
+
+                    <DropdownItem
+                      icon="bi-person"
+                      label="Profile"
+                      onClick={() =>
+                        navigate(
+                          user.role ===
+                            "owner"
+                            ? "/owner/profile"
+                            : "/user/profile"
+                        )
+                      }
                     />
-                  ) : (
-                    user.full_name?.charAt(0)?.toUpperCase() || "U"
-                  )}
+
+                    <DropdownItem
+                      icon="bi-pencil"
+                      label="Edit Profile"
+                      onClick={() =>
+                        navigate(
+                          user.role ===
+                            "owner"
+                            ? "/owner/profile/edit"
+                            : "/user/profile/edit"
+                        )
+                      }
+                    />
+
+                    <li>
+                      <hr className="dropdown-divider" />
+                    </li>
+
+                    <DropdownItem
+                      icon="bi-box-arrow-right"
+                      label="Logout"
+                      danger
+                      onClick={handleLogout}
+                    />
+                  </ul>
                 </div>
+              </>
+            )}
 
-                {/* Name */}
-                <span className="fw-medium">
-                  {user.full_name?.split(" ")[0]}
-                </span>
-              </button>
-
-              <ul className="dropdown-menu dropdown-menu-end">
-                <li>
-                  <button
-                    className="dropdown-item"
-                    onClick={() => navigate("/owner/profile")}
-                  >
-                    Profile
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    className="dropdown-item"
-                    onClick={() => navigate("/owner/profile/edit")}
-                  >
-                    Edit Profile
-                  </button>
-                </li>
-
-                <li><hr className="dropdown-divider" /></li>
-
-                <li>
-                  <button
-                    className="dropdown-item text-danger"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </li>
-              </ul>
-            </div>
-          )}
-
+            {/* Mobile Toggle */}
+            <button
+              className="btn d-lg-none"
+              onClick={() =>
+                setMenuOpen(!menuOpen)
+              }
+            >
+              <i
+                className={`bi ${
+                  menuOpen
+                    ? "bi-x-lg"
+                    : "bi-list"
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: -10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -10,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
+            className="d-lg-none"
+            style={{
+              background:
+                "rgba(255,255,255,.96)",
+              borderTop:
+                "1px solid var(--sn-border)",
+              padding: 14,
+            }}
+          >
+            <div className="d-grid gap-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="btn btn-light text-start"
+                >
+                  <i
+                    className={`bi ${item.icon} me-2`}
+                  />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
+  );
+}
+
+function NavItem({ item, active }) {
+  return (
+    <Link
+      to={item.to}
+      style={{
+        textDecoration: "none",
+        padding: "9px 14px",
+        borderRadius: 999,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        fontWeight: 700,
+        fontSize: ".88rem",
+        color: active
+          ? "var(--sn-primary)"
+          : "var(--sn-text-soft)",
+        background: active
+          ? "var(--sn-primary-soft)"
+          : "transparent",
+      }}
+    >
+      <i className={`bi ${item.icon}`} />
+      {item.label}
+    </Link>
+  );
+}
+
+function Avatar({ user }) {
+  return (
+    <div
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: "50%",
+        overflow: "hidden",
+        display: "grid",
+        placeItems: "center",
+        background:
+          "linear-gradient(135deg,#10b981,#059669)",
+        color: "#fff",
+        fontWeight: 800,
+        fontSize: ".82rem",
+        boxShadow:
+          "0 8px 18px rgba(16,185,129,.18)",
+        border: "2px solid #fff",
+        flexShrink: 0,
+      }}
+    >
+      {user.profile_image ? (
+        <img
+          src={user.profile_image}
+          alt="avatar"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      ) : (
+        user.full_name?.charAt(0)?.toUpperCase() ||
+        "U"
+      )}
+    </div>
+  );
+}
+
+function DropdownItem({
+  icon,
+  label,
+  onClick,
+  danger = false,
+}) {
+  return (
+    <li>
+      <button
+        onClick={onClick}
+        className="dropdown-toggle no-caret"
+        style={{
+          width: "100%",
+          border: "none",
+          appearance: "none",
+          background: "transparent",
+          padding: "11px 14px",
+          borderRadius: 14,
+          display: "flex",
+          alignItems: "center",
+          justifyContent:
+            "space-between",
+          fontWeight: 700,
+          fontSize: ".88rem",
+          color: danger
+            ? "var(--sn-danger)"
+            : "var(--sn-text)",
+          transition:
+            "all .18s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background =
+            danger
+              ? "rgba(239,68,68,.08)"
+              : "#f8fafc";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background =
+            "transparent";
+        }}
+      >
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <i className={`bi ${icon}`} />
+          {label}
+        </span>
+
+        {!danger && (
+          <i className="bi bi-chevron-right small text-muted" />
+        )}
+      </button>
+    </li>
   );
 }
