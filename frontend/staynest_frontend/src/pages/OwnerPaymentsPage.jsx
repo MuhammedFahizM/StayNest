@@ -28,6 +28,8 @@ import {
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
 
+
+const POLL_INTERVAL = 60000;
 // ── Status helpers ──
 const STATUS_COLORS = {
   PENDING: { bg: "#fff7ed", color: "#c2410c", border: "#fed7aa" },
@@ -424,6 +426,22 @@ export default function OwnerPaymentsPage() {
     finally { setRegisterLoading(null); }
   };
 
+
+  const updateDetailLedger = (entryId, patch) => {
+    setTenantDetail(prev => {
+      if (!prev) return prev;
+      return { ...prev, ledger: prev.ledger.map(e => e.id === entryId ? { ...e, ...patch } : e) };
+    });
+  };
+
+  const updateMonthLedger = (entryId, patch) => {
+    setMonthLedger(prev => prev.map(e => e.id === entryId ? { ...e, ...patch } : e));
+  };
+
+  const updateDepositInList = (bookingId, patch) => {
+    setDeposits(prev => prev.map(d => d.booking_id === bookingId ? { ...d, ...patch } : d));
+  };
+
   // ── Tab config ──
   const TABS = [
     { key: "tenants", label: "Tenants", icon: "bi-people" },
@@ -548,8 +566,12 @@ export default function OwnerPaymentsPage() {
               <ActionBtn label={depositLoading === bookingId ? "Marking..." : "Mark Cash Received"} disabled={depositLoading === bookingId}
                 onClick={async () => {
                   setDepositLoading(bookingId);
+                  setTenantDetail(prev => prev ? { ...prev, deposit: { ...prev.deposit, deposit_status: "PENDING_CONFIRMATION", marked_by_owner: true } } : prev);
                   try { await markDepositOffline(bookingId, dep.deposit_amount); toast.success("Marked. Tenant will confirm."); fetchTenantDetail(bookingId); fetchDeposits(selectedProperty); }
-                  catch (err) { toast.error(err.response?.data?.error || "Failed"); }
+                  catch (err) {
+                    setTenantDetail(prev => prev ? { ...prev, deposit: { ...prev.deposit, deposit_status: "PENDING_RECEIPT", marked_by_owner: false } } : prev);
+                    toast.error(err?.response?.data?.error || "Failed");
+                  }
                   finally { setDepositLoading(null); }
                 }}
               />
@@ -558,8 +580,14 @@ export default function OwnerPaymentsPage() {
               <ActionBtn label={depositLoading === bookingId ? "Confirming..." : "Confirm Tenant's Cash"} variant="green" disabled={depositLoading === bookingId}
                 onClick={async () => {
                   setDepositLoading(bookingId);
+                  setTenantDetail(prev => prev ? { ...prev, deposit: { ...prev.deposit, deposit_status: "HELD_BY_OWNER", marked_by_owner: true } } : prev);
+                  updateDepositInList(bookingId, { deposit_status: "HELD_BY_OWNER" });
                   try { await ownerConfirmDepositPaid(bookingId); toast.success("Deposit confirmed"); fetchTenantDetail(bookingId); fetchDeposits(selectedProperty); }
-                  catch (err) { toast.error(err.response?.data?.error || "Failed"); }
+                  catch (err) {
+                    setTenantDetail(prev => prev ? { ...prev, deposit: { ...prev.deposit, deposit_status: "PENDING_CONFIRMATION", marked_by_owner: false } } : prev);
+                    updateDepositInList(bookingId, { deposit_status: "PENDING_CONFIRMATION" });
+                    toast.error(err?.response?.data?.error || "Failed");
+                  }
                   finally { setDepositLoading(null); }
                 }}
               />
