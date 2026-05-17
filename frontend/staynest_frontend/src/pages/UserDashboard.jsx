@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { getUserBookings } from "../services/bookingService";
@@ -12,20 +12,57 @@ export default function UserDashboard() {
   const [activeBooking, setActiveBooking] = useState(null);
   const [currentLedger, setCurrentLedger] = useState(null);
 
+  const pollRef = useRef(null);
+  const activeBookingRef = useRef(null);
+
+  // Keep ref in sync for polling
+  useEffect(() => { activeBookingRef.current = activeBooking; }, [activeBooking]);
+
+  // ── Initial load ──
   useEffect(() => {
-    getUserBookings()
-      .then((data) => {
-        const active = data.filter((b) => b.status === "ACTIVE");
-        setBookingCount(active.length);
-        if (active.length > 0) setActiveBooking(active[0]);
-      })
-      .catch(() => {});
+    fetchStats();
   }, []);
 
+  // ── Fetch ledger whenever activeBooking changes ──
   useEffect(() => {
     if (!activeBooking) return;
     getCurrentLedger(activeBooking.id).then(setCurrentLedger).catch(() => {});
   }, [activeBooking]);
+
+  // ── Polling — 60s silent refresh ──
+  useEffect(() => {
+    const silentPoll = () => {
+      if (!document.hidden) fetchStats(true);
+    };
+    pollRef.current = setInterval(silentPoll, 60000);
+    const handleVisibility = () => { if (!document.hidden) fetchStats(true); };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(pollRef.current);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  const fetchStats = async (silent = false) => {
+    try {
+      const data = await getUserBookings();
+      const active = data.filter((b) => b.status === "ACTIVE");
+      setBookingCount(active.length);
+      const booking = active[0] || null;
+      setActiveBooking(booking);
+      // Also refresh ledger if there's an active booking
+      if (booking) {
+        try {
+          const ledger = await getCurrentLedger(booking.id);
+          setCurrentLedger(ledger);
+        } catch { /* silent */ }
+      } else {
+        setCurrentLedger(null);
+      }
+    } catch {
+      if (!silent) toast.error("Unable to load dashboard");
+    }
+  };
 
   const handlePaymentsClick = async () => {
     try {
@@ -46,7 +83,7 @@ export default function UserDashboard() {
       NONE:     { label: "All payments done",   bg: "rgba(16,185,129,0.1)", color: "#059669", border: "#bbf7d0", icon: "bi-check-circle-fill" },
       PAY_RENT: { label: `Rent due ₹${currentLedger.rent_amount ?? "—"}`, bg: "#fff7ed", color: "#c2410c", border: "#fed7aa", icon: "bi-exclamation-circle" },
       PAY_FOOD: { label: `Food due ₹${currentLedger.food_amount ?? "—"}`, bg: "#fff7ed", color: "#c2410c", border: "#fed7aa", icon: "bi-exclamation-circle" },
-      PAY_BOTH: { label: "Rent + Food due",      bg: "#fef2f2", color: "#dc2626", border: "#fecaca", icon: "bi-exclamation-triangle-fill" },
+      PAY_BOTH: { label: "Rent + Food due", bg: "#fef2f2", color: "#dc2626", border: "#fecaca", icon: "bi-exclamation-triangle-fill" },
     };
     const s = map[currentLedger.action];
     if (!s) return null;
@@ -86,14 +123,10 @@ export default function UserDashboard() {
       <div
         className="card-inner"
         style={{
-          background: "var(--sn-surface)",
-          borderRadius: "var(--sn-radius-sm)",
-          border: "1px solid var(--sn-border)",
-          padding: "22px 24px",
-          boxShadow: "var(--sn-shadow-sm)",
-          transition: "all var(--sn-speed) var(--sn-ease)",
-          cursor: onClick ? "pointer" : "default",
-          height: "100%",
+          background: "var(--sn-surface)", borderRadius: "var(--sn-radius-sm)",
+          border: "1px solid var(--sn-border)", padding: "22px 24px",
+          boxShadow: "var(--sn-shadow-sm)", transition: "all var(--sn-speed) var(--sn-ease)",
+          cursor: onClick ? "pointer" : "default", height: "100%",
         }}
       >
         {children}
@@ -124,18 +157,10 @@ export default function UserDashboard() {
 
         {/* Header */}
         <div className="sn-reveal" style={{ marginBottom: 32 }}>
-          <p style={{
-            color: "var(--sn-primary)", fontWeight: 700,
-            fontSize: "var(--sn-fs-xs)", marginBottom: 6,
-            letterSpacing: "1px", textTransform: "uppercase",
-          }}>
+          <p style={{ color: "var(--sn-primary)", fontWeight: 700, fontSize: "var(--sn-fs-xs)", marginBottom: 6, letterSpacing: "1px", textTransform: "uppercase" }}>
             Dashboard
           </p>
-          <h2 style={{
-            fontWeight: 800, color: "var(--sn-text)",
-            marginBottom: 6, fontSize: "var(--sn-fs-2xl)",
-            letterSpacing: "-0.3px",
-          }}>
+          <h2 style={{ fontWeight: 800, color: "var(--sn-text)", marginBottom: 6, fontSize: "var(--sn-fs-2xl)", letterSpacing: "-0.3px" }}>
             Welcome back, {user?.full_name?.split(" ")[0]} 👋
           </h2>
           <p style={{ color: "var(--sn-text-soft)", fontSize: "var(--sn-fs-sm)", margin: 0 }}>
@@ -175,7 +200,12 @@ export default function UserDashboard() {
 
           {/* Current Stay */}
           <div className="col-12 col-md-6 col-lg-4">
-            <CardWrap delay={0.18} onClick={activeBooking ? () => navigate(`/browse-stays/${activeBooking.property}`) : () => navigate("/browse-stays")}>
+            <CardWrap
+              delay={0.18}
+              onClick={activeBooking
+                ? () => navigate(`/browse-stays/${activeBooking.property}`)
+                : () => navigate("/browse-stays")}
+            >
               <IconBox icon="bi-geo-alt" />
               <CardLabel>Current Stay</CardLabel>
               {!activeBooking ? (

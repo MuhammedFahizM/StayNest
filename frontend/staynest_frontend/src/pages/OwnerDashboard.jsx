@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { ownerDashboard } from "../services/authService";
 import { AuthContext } from "../context/AuthContext";
 import { getOwnerProperties } from "../services/propertyService";
@@ -23,6 +23,9 @@ export default function OwnerDashboard() {
   const [tenantStats, setTenantStats] = useState({ active: 0, vacated: 0 });
   const [pendingBookings, setPendingBookings] = useState(0);
 
+  const pollRef = useRef(null);
+
+  // ── Initial loads ──
   useEffect(() => { getOwnerProfile().then(setOwnerProfile); }, []);
 
   useEffect(() => {
@@ -50,13 +53,33 @@ export default function OwnerDashboard() {
   }, []);
 
   useEffect(() => {
-    getOwnerTenantList()
-      .then((d) => setTenantStats({ active: d.active?.length || 0, vacated: d.vacated?.length || 0 }))
-      .catch(() => {});
-    getOwnerBookings()
-      .then((d) => setPendingBookings(d.filter((b) => b.status === "PENDING").length))
-      .catch(() => {});
+    fetchLiveStats();
   }, []);
+
+  // ── Polling — 60s silent refresh for live stats ──
+  useEffect(() => {
+    const silentPoll = () => {
+      if (!document.hidden) fetchLiveStats();
+    };
+    pollRef.current = setInterval(silentPoll, 60000);
+    const handleVisibility = () => { if (!document.hidden) fetchLiveStats(); };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(pollRef.current);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  const fetchLiveStats = async () => {
+    try {
+      const [tenants, bookings] = await Promise.all([
+        getOwnerTenantList(),
+        getOwnerBookings(),
+      ]);
+      setTenantStats({ active: tenants.active?.length || 0, vacated: tenants.vacated?.length || 0 });
+      setPendingBookings(bookings.filter((b) => b.status === "PENDING").length);
+    } catch { /* silent */ }
+  };
 
   const handleActivatePayments = async () => {
     try {
@@ -82,7 +105,7 @@ export default function OwnerDashboard() {
 
   const isProfileComplete = (p) =>
     !!(p?.phone && p?.address && p?.city && p?.state && p?.postal_code &&
-       p?.bank_account_number && p?.bank_ifsc_code && p?.bank_beneficiary_name);
+      p?.bank_account_number && p?.bank_ifsc_code && p?.bank_beneficiary_name);
 
   /* ── Loading ── */
   if (loading) return (
@@ -111,12 +134,7 @@ export default function OwnerDashboard() {
         padding: "48px 56px", border: "1px solid var(--sn-border)",
         boxShadow: "var(--sn-shadow-md)", maxWidth: 440, textAlign: "center",
       }}>
-        <div style={{
-          width: 72, height: 72, borderRadius: "50%",
-          background: "#fff7ed", margin: "0 auto 20px",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 32,
-        }}>⏳</div>
+        <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#fff7ed", margin: "0 auto 20px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32 }}>⏳</div>
         <h5 style={{ fontWeight: 700, color: "var(--sn-text)", marginBottom: 8 }}>Account Under Review</h5>
         <p style={{ color: "var(--sn-text-soft)", fontSize: "var(--sn-fs-sm)", margin: 0, lineHeight: 1.7 }}>{message}</p>
       </div>
@@ -125,13 +143,9 @@ export default function OwnerDashboard() {
 
   /* ── Helpers ── */
   const cardBase = {
-    background: "var(--sn-surface)",
-    borderRadius: "var(--sn-radius-sm)",
-    border: "1px solid var(--sn-border)",
-    padding: "22px 24px",
-    boxShadow: "var(--sn-shadow-sm)",
-    transition: "all var(--sn-speed) var(--sn-ease)",
-    height: "100%",
+    background: "var(--sn-surface)", borderRadius: "var(--sn-radius-sm)",
+    border: "1px solid var(--sn-border)", padding: "22px 24px",
+    boxShadow: "var(--sn-shadow-sm)", transition: "all var(--sn-speed) var(--sn-ease)", height: "100%",
   };
 
   const CardWrap = ({ children, onClick, delay = 0 }) => (
@@ -154,10 +168,7 @@ export default function OwnerDashboard() {
         }
       }}
     >
-      <div
-        className="card-inner"
-        style={{ ...cardBase, cursor: onClick ? "pointer" : "default" }}
-      >
+      <div className="card-inner" style={{ ...cardBase, cursor: onClick ? "pointer" : "default" }}>
         {children}
       </div>
     </div>
@@ -186,18 +197,10 @@ export default function OwnerDashboard() {
 
         {/* Header */}
         <div className="sn-reveal" style={{ marginBottom: 32 }}>
-          <p style={{
-            color: "var(--sn-primary)", fontWeight: 700,
-            fontSize: "var(--sn-fs-xs)", marginBottom: 6,
-            letterSpacing: "1px", textTransform: "uppercase",
-          }}>
+          <p style={{ color: "var(--sn-primary)", fontWeight: 700, fontSize: "var(--sn-fs-xs)", marginBottom: 6, letterSpacing: "1px", textTransform: "uppercase" }}>
             Owner Dashboard
           </p>
-          <h2 style={{
-            fontWeight: 800, color: "var(--sn-text)",
-            marginBottom: 6, fontSize: "var(--sn-fs-2xl)",
-            letterSpacing: "-0.3px",
-          }}>
+          <h2 style={{ fontWeight: 800, color: "var(--sn-text)", marginBottom: 6, fontSize: "var(--sn-fs-2xl)", letterSpacing: "-0.3px" }}>
             Welcome back, {user?.full_name?.split(" ")[0]} 👋
           </h2>
           <p style={{ color: "var(--sn-text-soft)", fontSize: "var(--sn-fs-sm)", margin: 0 }}>
@@ -248,21 +251,17 @@ export default function OwnerDashboard() {
               ) : paymentStatus?.account_id ? (
                 <div>
                   <span style={{
-                    display: "inline-block",
-                    background: "#fff7ed", color: "#c2410c",
+                    display: "inline-block", background: "#fff7ed", color: "#c2410c",
                     fontSize: "var(--sn-fs-xs)", fontWeight: 700,
                     padding: "4px 12px", borderRadius: "var(--sn-radius-pill)",
                     marginBottom: 10, border: "1px solid #fed7aa",
-                  }}>
-                    KYC Pending
-                  </span>
+                  }}>KYC Pending</span>
                   <br />
                   <button
                     onClick={handleActivatePayments}
                     style={{
                       border: "1px solid var(--sn-primary)", color: "var(--sn-primary)",
-                      background: "transparent",
-                      fontSize: "var(--sn-fs-xs)", fontWeight: 600,
+                      background: "transparent", fontSize: "var(--sn-fs-xs)", fontWeight: 600,
                       borderRadius: "var(--sn-radius-xs)", padding: "5px 14px",
                       cursor: "pointer", transition: "all var(--sn-speed-fast)",
                     }}
@@ -280,11 +279,9 @@ export default function OwnerDashboard() {
                   <button
                     onClick={handleActivatePayments}
                     style={{
-                      background: "var(--sn-primary)", color: "#fff",
-                      border: "none", borderRadius: "var(--sn-radius-xs)",
-                      fontSize: "var(--sn-fs-xs)", fontWeight: 600,
-                      padding: "6px 16px", cursor: "pointer",
-                      transition: "all var(--sn-speed-fast)",
+                      background: "var(--sn-primary)", color: "#fff", border: "none",
+                      borderRadius: "var(--sn-radius-xs)", fontSize: "var(--sn-fs-xs)", fontWeight: 600,
+                      padding: "6px 16px", cursor: "pointer", transition: "all var(--sn-speed-fast)",
                       boxShadow: "0 2px 8px rgba(16,185,129,0.3)",
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--sn-primary-hover)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
@@ -306,10 +303,8 @@ export default function OwnerDashboard() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "var(--sn-fs-sm)", color: "var(--sn-text-soft)" }}>Active Tenants</span>
                   <span style={{
-                    fontWeight: 700, fontSize: "var(--sn-fs-sm)",
-                    color: "#059669",
-                    background: "rgba(16,185,129,0.08)",
-                    padding: "2px 10px", borderRadius: "var(--sn-radius-pill)",
+                    fontWeight: 700, fontSize: "var(--sn-fs-sm)", color: "#059669",
+                    background: "rgba(16,185,129,0.08)", padding: "2px 10px", borderRadius: "var(--sn-radius-pill)",
                   }}>{tenantStats.active}</span>
                 </div>
                 <div
@@ -362,8 +357,7 @@ export default function OwnerDashboard() {
                   padding: "3px 10px", borderRadius: "var(--sn-radius-pill)",
                   border: "1px solid #fde68a",
                 }}>
-                  <i className="bi bi-clock" style={{ fontSize: 10 }}></i>
-                  {pendingBookings} pending
+                  <i className="bi bi-clock" style={{ fontSize: 10 }}></i> {pendingBookings} pending
                 </span>
               )}
             </CardWrap>
